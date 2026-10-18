@@ -10,7 +10,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Sign in to Hub</CardTitle>
-          <CardDescription>We&apos;ll email you a sign-in code.</CardDescription>
+          <CardDescription>Sign in with your email and password.</CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />
