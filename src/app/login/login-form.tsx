@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { sendMagicLink, signIn, type LoginState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,17 @@ import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const [useLink, setUseLink] = useState(false);
-  return useLink ? <LinkForm onBack={() => setUseLink(false)} /> : <PasswordForm onForgot={() => setUseLink(true)} />;
+  const linkFailed = useSearchParams().get("error") === "auth";
+  return (
+    <div className="space-y-4">
+      {linkFailed && (
+        <p className="text-sm text-destructive">
+          That sign-in link didn&apos;t work. Links only work in the same browser you requested them from, and only once.
+        </p>
+      )}
+      {useLink ? <LinkForm onBack={() => setUseLink(false)} /> : <PasswordForm onForgot={() => setUseLink(true)} />}
+    </div>
+  );
 }
 
 function PasswordForm({ onForgot }: { onForgot: () => void }) {
