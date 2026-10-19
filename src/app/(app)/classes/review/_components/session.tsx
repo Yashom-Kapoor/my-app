@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { ChevronLeftIcon, MoreVerticalIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { Grade } from "@/lib/classes/cards/fsrs";
 import { Markdown } from "../../_components/markdown";
-import { deleteCard, loadCards, loadExtraCards, rateCard } from "../actions";
+import { deleteCard, loadCards, loadMoreCards, rateCard } from "../actions";
 import type { ReviewCard } from "../data";
 import { removeCurrent, requeueAgain } from "./queue";
 
@@ -29,12 +29,18 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
   const [reviewed, setReviewed] = useState(0);
   const [extraEmpty, setExtraEmpty] = useState(false);
   const [pending, startTransition] = useTransition();
+  // Timer starts when a card is shown (thinking time counts), not at "Show answer".
+  const shownAt = useRef(0);
   const revealedAt = useRef(0);
   const busy = useRef(false);
-  // Every id handed to this client, so "Learn 20 more" never repeats a card.
-  const seen = useRef(new Set([...initialCards.map((c) => c.id), ...restIds]));
 
   const card = queue[idx];
+  // Restart the timer whenever a different card (or queue slot) is on screen.
+  const slot = `${idx}:${card?.id ?? ""}`;
+  useEffect(() => {
+    shownAt.current = now();
+    revealedAt.current = 0;
+  }, [slot]);
   const advance = () => {
     setRevealed(false);
     setMenu(false);
@@ -48,8 +54,10 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
 
   const rate = async (grade: Grade) => {
     if (!card || busy.current) return;
+    // A double tap on "Show answer" must not rate the card.
+    if (now() - revealedAt.current < 300) return;
     busy.current = true;
-    const seconds = (now() - revealedAt.current) / 1000;
+    const seconds = (now() - shownAt.current) / 1000;
     try {
       const res = await rateCard(card.id, grade, card.last_review, seconds);
       if (res.ok) setReviewed((n) => n + 1);
@@ -85,20 +93,24 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
 
   const keepGoing = () =>
     startTransition(async () => {
-      const ids = rest.slice(0, PAGE);
-      if (ids.length) {
-        const cards = await loadCards(ids);
-        setRest(rest.slice(PAGE));
-        append(cards);
-        return;
+      try {
+        const ids = rest.slice(0, PAGE);
+        if (ids.length) {
+          const cards = await loadCards(ids);
+          setRest(rest.slice(PAGE));
+          append(cards);
+          return;
+        }
+        // Nothing is held (rest is empty and the queue is finished), so no exclusions are needed.
+        const more = await loadMoreCards([]);
+        if (!more.cards.length) {
+          setExtraEmpty(true);
+          return;
+        }
+        append(more.cards);
+      } catch {
+        toast.error("Could not load more cards");
       }
-      const extra = await loadExtraCards([...seen.current]);
-      if (!extra.cards.length) {
-        setExtraEmpty(true);
-        return;
-      }
-      for (const id of extra.ids) seen.current.add(id);
-      append(extra.cards);
     });
 
   const append = (cards: ReviewCard[]) => {
@@ -188,13 +200,13 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
         {revealed ? (
           <div className="grid grid-cols-4 gap-2">
             {GRADES.map((g) => (
-              <Button key={g.grade} variant="outline" className={`h-12 text-sm ${g.className}`} onClick={() => rate(g.grade)}>
+              <Button key={g.grade} variant="outline" className={`h-12 touch-manipulation text-sm ${g.className}`} onClick={() => rate(g.grade)}>
                 {g.label}
               </Button>
             ))}
           </div>
         ) : (
-          <Button className="h-12 w-full text-base" onClick={reveal}>
+          <Button className="h-12 w-full touch-manipulation text-base" onClick={reveal}>
             Show answer
           </Button>
         )}

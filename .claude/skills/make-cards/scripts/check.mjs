@@ -8,7 +8,7 @@ const since = args.includes("--since") ? args[args.indexOf("--since") + 1] : und
 const userId = await ownerId();
 
 const materials = await fetchAll(() =>
-  db.from("materials").select("id, kind, title, cards_hash, course:courses ( code )").eq("user_id", userId).eq("status", "ready").neq("kind", "solutions").order("sort_date", { nullsFirst: false }).order("id"),
+  db.from("materials").select("id, kind, title, cards_hash, course:courses ( code )").eq("user_id", userId).eq("status", "ready").is("parent_id", null).order("sort_date", { nullsFirst: false }).order("id"),
 );
 const concepts = await fetchAll(() => db.from("concepts").select("material_id").eq("user_id", userId).is("deleted_at", null).order("id"));
 const cards = await fetchAll(() => db.from("cards").select("material_id, level, created_at").eq("user_id", userId).is("deleted_at", null).order("id"));

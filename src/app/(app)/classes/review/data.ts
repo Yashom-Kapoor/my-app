@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dateOf, today } from "@/lib/dates";
 import { fetchAll } from "@/lib/classes/cards/fetch-all";
 import { isGraduated, type CardState } from "@/lib/classes/cards/fsrs";
-import { alternateCourses, pace, planDay, secondsPerCard, type Level, type PlanCard } from "@/lib/classes/cards/plan";
+import { alternateCourses, pace, planDay, secondsPerCard, unlockedConcepts, type Level, type PlanCard } from "@/lib/classes/cards/plan";
 
 export type ReviewCard = {
   id: string;
@@ -28,9 +28,10 @@ async function loadPlanningState() {
       supabase
         .from("cards")
         .select(
-          "id, level, concept_id, state, due, course_id, material_id, reps, concept:concepts!concept_id!inner ( position, deleted_at ), material:materials ( sort_date )",
+          "id, level, concept_id, state, due, course_id, material_id, reps, concept:concepts!concept_id!inner ( position, deleted_at ), material:materials ( sort_date ), course:courses!inner ( hidden )",
         )
         .is("deleted_at", null)
+        .eq("course.hidden", false)
         .is("concept.deleted_at", null)
         .order("id")
         .range(from, to),
@@ -77,8 +78,12 @@ async function loadPlanningState() {
     introduced: r.reps > 0,
   }));
 
-  const unlockedConceptIds = new Set(
-    rows.filter((r) => r.level === "explain" && isGraduated({ state: r.state } as CardState)).map((r) => r.concept_id),
+  const unlockedConceptIds = unlockedConcepts(
+    rows.map((r) => ({
+      concept_id: r.concept_id,
+      level: r.level as Level,
+      graduated: isGraduated({ state: r.state } as CardState),
+    })),
   );
 
   const todays = recent.filter((r) => dateOf(r.reviewed_at) === day);
@@ -120,7 +125,7 @@ export async function getStudyOverview(): Promise<{
   });
 
   const explain = cards.filter((c) => c.level === "explain");
-  const capacity = Math.floor((budgetMinutes * 60) / perCard.explain);
+  const capacity = Math.max(1, Math.floor((budgetMinutes * 60) / Math.max(1, perCard.explain)));
   return {
     dueCount: plan.dueCount,
     estMinutes: plan.estMinutes,

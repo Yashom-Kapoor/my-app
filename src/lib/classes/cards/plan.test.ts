@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainBudget, pace, planDay, secondsPerCard, type Level, type PlanCard } from "./plan";
+import { explainBudget, pace, planDay, secondsPerCard, unlockedConcepts, type Level, type PlanCard } from "./plan";
 
 const NOW = new Date("2026-10-20T12:00:00Z");
 const PER_CARD: Record<Level, number> = { explain: 20, why: 40, apply: 60, contrast: 45, trap: 45 };
@@ -63,6 +63,38 @@ describe("secondsPerCard", () => {
     const r = secondsPerCard(h);
     expect(r.why).toBe(6.5);
     expect(r.explain).toBe(20);
+  });
+});
+
+describe("secondsPerCard floor and threshold", () => {
+  it("floors each level at 3 seconds", () => {
+    const h = Array.from({ length: 12 }, () => ({ level: "explain" as Level, seconds: 0 }));
+    expect(secondsPerCard(h).explain).toBe(3);
+  });
+  it("applies the sample threshold per level", () => {
+    const h = [
+      ...Array.from({ length: 10 }, () => ({ level: "why" as Level, seconds: 30 })),
+      ...Array.from({ length: 3 }, () => ({ level: "apply" as Level, seconds: 5 })),
+    ];
+    const r = secondsPerCard(h);
+    expect(r.why).toBe(30);
+    expect(r.apply).toBe(60);
+  });
+});
+
+describe("unlockedConcepts", () => {
+  const row = (concept_id: string | null, level: Level, graduated = false) => ({ concept_id, level, graduated });
+  it("unlocks a concept whose explain card graduated", () => {
+    expect(unlockedConcepts([row("k", "explain", true), row("k", "why")]).has("k")).toBe(true);
+  });
+  it("keeps a concept locked while its explain card is learning", () => {
+    expect(unlockedConcepts([row("k", "explain", false), row("k", "why")]).has("k")).toBe(false);
+  });
+  it("unlocks a concept with no live explain card", () => {
+    expect(unlockedConcepts([row("k", "why"), row("k", "apply")]).has("k")).toBe(true);
+  });
+  it("ignores cards without a concept", () => {
+    expect(unlockedConcepts([row(null, "explain", true)]).size).toBe(0);
   });
 });
 

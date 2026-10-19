@@ -34,15 +34,37 @@ export function explainBudget(remainingExplain: number, today: string, target: s
   return Math.max(0, Math.ceil(remainingExplain / days));
 }
 
+const MIN_SECONDS = 3;
+const MIN_SAMPLES = 10;
+
+/** Per-level median seconds; a level with fewer than 10 samples keeps its default. Floored at 3 s. */
 export function secondsPerCard(history: { level: Level; seconds: number }[]): Record<Level, number> {
   const out = { ...DEFAULT_SECONDS };
-  if (history.length < 10) return out;
   for (const level of LEVELS) {
     const xs = history.filter((h) => h.level === level).map((h) => h.seconds).sort((a, b) => a - b);
-    if (xs.length === 0) continue;
+    if (xs.length < MIN_SAMPLES) continue;
     const mid = Math.floor(xs.length / 2);
-    out[level] = xs.length % 2 ? xs[mid] : (xs[mid - 1] + xs[mid]) / 2;
+    const median = xs.length % 2 ? xs[mid] : (xs[mid - 1] + xs[mid]) / 2;
+    out[level] = Math.max(MIN_SECONDS, median);
   }
+  return out;
+}
+
+/**
+ * Concepts whose deeper cards may be introduced: the explain card graduated, or the concept has
+ * no live explain card (deleted), so deeper cards are never stranded. `rows` are live cards only.
+ */
+export function unlockedConcepts(rows: { concept_id: string | null; level: Level; graduated: boolean }[]): Set<string> {
+  const hasExplain = new Set<string>();
+  const out = new Set<string>();
+  for (const r of rows) {
+    if (!r.concept_id) continue;
+    if (r.level === "explain") {
+      hasExplain.add(r.concept_id);
+      if (r.graduated) out.add(r.concept_id);
+    }
+  }
+  for (const r of rows) if (r.concept_id && !hasExplain.has(r.concept_id)) out.add(r.concept_id);
   return out;
 }
 

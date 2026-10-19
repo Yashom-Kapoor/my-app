@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { rate, type CardState, type Grade } from "@/lib/classes/cards/fsrs";
 import { shouldApplyRating } from "@/lib/classes/cards/rate-guard";
 import type { ActionState } from "../actions";
-import { getCards, getExtraQueue, type ReviewCard } from "./data";
+import { getCards, getExtraQueue, getStudyOverview, type ReviewCard } from "./data";
 
 const gradeSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
 
@@ -67,8 +67,11 @@ export async function rateCard(
 
 export async function deleteCard(id: string) {
   const supabase = await createClient();
-  await supabase.from("cards").update({ deleted_at: new Date().toISOString() }).eq("id", z.string().uuid().parse(id));
-  refresh();
+  const { error } = await supabase
+    .from("cards")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", z.string().uuid().parse(id));
+  if (error) throw new Error(error.message);
 }
 
 const settingsSchema = z.object({
@@ -102,8 +105,14 @@ export async function loadCards(ids: string[]): Promise<ReviewCard[]> {
   return getCards(idsSchema.parse(ids));
 }
 
-/** "Learn 20 more": the next not-yet-introduced cards beyond today's budget. */
-export async function loadExtraCards(excludeIds: string[]): Promise<{ ids: string[]; cards: ReviewCard[] }> {
-  const ids = await getExtraQueue(20, idsSchema.parse(excludeIds));
+/**
+ * Called when the client has nothing left. First re-plans today (learning cards come due again
+ * during a long session); only if that is empty, offers the next not-yet-introduced cards beyond
+ * the budget. `heldIds` are unrated cards the client still holds. Rated cards are excluded server-side.
+ */
+export async function loadMoreCards(heldIds: string[]): Promise<{ ids: string[]; cards: ReviewCard[] }> {
+  const held = new Set(idsSchema.parse(heldIds));
+  const replanned = (await getStudyOverview()).queue.filter((id) => !held.has(id));
+  const ids = replanned.length ? replanned.slice(0, 50) : await getExtraQueue(20, [...held]);
   return { ids, cards: await getCards(ids) };
 }
