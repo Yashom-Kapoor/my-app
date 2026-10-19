@@ -118,10 +118,18 @@ describe("planDay", () => {
     expect(planDay(input([x, y, z])).queue).toEqual([z.id, y.id, x.id]);
   });
 
-  it("caps new explain cards by explainBudget minus introduced today", () => {
-    const cards = Array.from({ length: 100 }, () => card());
+  it("caps new explain cards by the start-of-day budget minus introduced today", () => {
+    // 96 fresh + 4 introduced today = 100 at start of day, 10 days left -> 10/day, 6 still owed
+    const cards = Array.from({ length: 96 }, () => card());
     const r = planDay(input(cards, { target: "2026-10-29", introducedToday: { explain: 4, deeper: 0 } }));
     expect(r.queue).toHaveLength(6);
+  });
+
+  it("does not double-count today's progress", () => {
+    // 100 at start of day, 5 days left -> 20/day; 15 done, 85 remain -> 5 still owed
+    const cards = Array.from({ length: 85 }, () => card());
+    const r = planDay(input(cards, { target: "2026-10-24", introducedToday: { explain: 15, deeper: 0 } }));
+    expect(r.queue).toHaveLength(5);
   });
 
   it("counts time already spent today", () => {

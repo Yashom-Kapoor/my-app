@@ -125,7 +125,8 @@ export function planDay(input: {
   const newExplain = fresh.filter((c) => c.level === "explain");
   const explainCap = Math.max(
     0,
-    explainBudget(newExplain.length, today, target) - input.introducedToday.explain,
+    explainBudget(newExplain.length + input.introducedToday.explain, today, target) -
+      input.introducedToday.explain,
   );
   const newDeeper = fresh.filter(
     (c) => c.level !== "explain" && c.concept_id !== null && unlockedConceptIds.has(c.concept_id),
