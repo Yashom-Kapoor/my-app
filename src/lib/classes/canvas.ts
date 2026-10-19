@@ -42,9 +42,11 @@ export async function fetchCanvas(token: string) {
   if (!courses.length) return { courses, announcements: [] };
 
   const since = new Date(Date.now() - ANNOUNCEMENT_WINDOW_DAYS * 86_400_000).toISOString();
+  // Canvas defaults end_date to start_date + 28 days, so it has to be set explicitly.
+  const until = new Date(Date.now() + 86_400_000).toISOString();
   const contexts = courses.map((c) => `context_codes[]=course_${c.id}`).join("&");
   const raw = await getAll<CanvasAnnouncement>(
-    `/announcements?${contexts}&start_date=${since}&per_page=100`,
+    `/announcements?${contexts}&start_date=${since}&end_date=${until}&per_page=100`,
     token,
   );
   const announcements: RemoteAnnouncement[] = raw
