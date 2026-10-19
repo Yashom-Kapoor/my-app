@@ -99,17 +99,21 @@ async function saveAssignments(supabase: Client, userId: string, courseId: strin
     }
     const { data: page } = await supabase.from("material_pages").select("markdown").eq("material_id", id).eq("page", 1).maybeSingle();
     if (page?.markdown === markdown) {
-      if (existing!.title !== m.title) await supabase.from("materials").update({ title: m.title }).eq("id", id);
+      if (existing!.title !== m.title) {
+        const { error } = await supabase.from("materials").update({ title: m.title }).eq("id", id);
+        if (error) throw new Error(error.message);
+      }
       continue;
     }
     const { error } = await supabase
       .from("material_pages")
       .upsert({ material_id: id, page: 1, user_id: userId, markdown }, { onConflict: "material_id,page" });
     if (error) throw new Error(error.message);
-    await supabase
+    const { error: updateError } = await supabase
       .from("materials")
       .update({ title: m.title, sort_date: m.sortDate, status: "ready", error: null, page_count: 1, processed_at: now })
       .eq("id", id);
+    if (updateError) throw new Error(updateError.message);
   }
 }
 
@@ -173,11 +177,17 @@ export async function discoverMaterials(supabase: Client, userId: string) {
           ? await discoverCanvasFiles(canvasToken, course.canvas_id)
           : [];
       await save(supabase, userId, course.id, found);
-      if (!adapter && course.canvas_id && canvasToken) {
-        await saveAssignments(supabase, userId, course.id, await discoverCanvasAssignments(canvasToken, course.canvas_id));
-      }
     } catch (e) {
       errors.push(`${course.code}: ${e instanceof Error ? e.message : "discovery failed"}`);
+    }
+    if (!course.website_url || !siteAdapter(course.website_url)) {
+      if (course.canvas_id && canvasToken) {
+        try {
+          await saveAssignments(supabase, userId, course.id, await discoverCanvasAssignments(canvasToken, course.canvas_id));
+        } catch (e) {
+          errors.push(`${course.code}: ${e instanceof Error ? e.message : "assignment discovery failed"}`);
+        }
+      }
     }
   }
   await convertReadings(supabase, userId);
