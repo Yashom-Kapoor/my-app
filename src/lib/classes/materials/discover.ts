@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { decrypt } from "../crypto";
-import { discoverCanvasFiles } from "./canvas-files";
+import { discoverCanvasAssignments, discoverCanvasFiles, type FoundAssignment } from "./canvas-files";
 import { datahubToRaw, notebookToMarkdown } from "./notebook";
 import { convertReading } from "./readings";
 import { discoverCs161 } from "./sites/cs161";
@@ -59,6 +59,57 @@ async function save(supabase: Client, userId: string, courseId: string, found: F
     if (child && parent && child.parent_id !== parent.id) {
       await supabase.from("materials").update({ parent_id: parent.id }).eq("id", child.id);
     }
+  }
+}
+
+/**
+ * Assignment descriptions arrive already converted, so they are saved `ready` with their page in one
+ * pass (convertReadings only fetches pending/failed rows, and these URLs need a login). The page and
+ * `processed_at` are rewritten only when the Markdown changed, so make-cards sees real edits as stale.
+ */
+async function saveAssignments(supabase: Client, userId: string, courseId: string, found: FoundAssignment[]) {
+  for (const { material: m, markdown } of found) {
+    const { data: existing } = await supabase
+      .from("materials")
+      .select("id, title")
+      .eq("user_id", userId)
+      .eq("source_url", m.sourceUrl)
+      .maybeSingle();
+    const now = new Date().toISOString();
+    let id = existing?.id;
+    if (!id) {
+      const { data, error } = await supabase
+        .from("materials")
+        .insert({
+          user_id: userId, course_id: courseId, kind: m.kind, format: m.format, title: m.title, week_label: m.weekLabel,
+          sort_date: m.sortDate, source_url: m.sourceUrl, status: "ready", page_count: 1, processed_at: now,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      id = data.id;
+      const { error: pageError } = await supabase
+        .from("material_pages")
+        .upsert({ material_id: id, page: 1, user_id: userId, markdown }, { onConflict: "material_id,page" });
+      if (pageError) {
+        await supabase.from("materials").delete().eq("id", id);
+        throw new Error(pageError.message);
+      }
+      continue;
+    }
+    const { data: page } = await supabase.from("material_pages").select("markdown").eq("material_id", id).eq("page", 1).maybeSingle();
+    if (page?.markdown === markdown) {
+      if (existing!.title !== m.title) await supabase.from("materials").update({ title: m.title }).eq("id", id);
+      continue;
+    }
+    const { error } = await supabase
+      .from("material_pages")
+      .upsert({ material_id: id, page: 1, user_id: userId, markdown }, { onConflict: "material_id,page" });
+    if (error) throw new Error(error.message);
+    await supabase
+      .from("materials")
+      .update({ title: m.title, sort_date: m.sortDate, status: "ready", error: null, page_count: 1, processed_at: now })
+      .eq("id", id);
   }
 }
 
@@ -122,6 +173,9 @@ export async function discoverMaterials(supabase: Client, userId: string) {
           ? await discoverCanvasFiles(canvasToken, course.canvas_id)
           : [];
       await save(supabase, userId, course.id, found);
+      if (!adapter && course.canvas_id && canvasToken) {
+        await saveAssignments(supabase, userId, course.id, await discoverCanvasAssignments(canvasToken, course.canvas_id));
+      }
     } catch (e) {
       errors.push(`${course.code}: ${e instanceof Error ? e.message : "discovery failed"}`);
     }

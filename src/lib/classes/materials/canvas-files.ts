@@ -1,6 +1,8 @@
 import "server-only";
 import { CANVAS_BASE, getAll } from "../canvas";
+import { dateOf } from "@/lib/dates";
 import { clean } from "./fetch";
+import { htmlToMarkdown } from "./readings";
 import type { FoundMaterial, MaterialKind } from "./types";
 
 // bCourses course files (PDFs only), labelled with the module they sit in.
@@ -69,4 +71,36 @@ export async function discoverCanvasFiles(token: string, courseId: string): Prom
     sol.parentUrl = matches.sort((a, b) => gap(a) - gap(b))[0]?.sourceUrl;
   }
   return found;
+}
+
+// bCourses assignment descriptions: the prompt text is already HTML, so it becomes a homework
+// material with its Markdown page directly. The assignment URL needs a login, so it can't be fetched later.
+
+type CanvasAssignment = { id: number; name: string; description: string | null; due_at: string | null; html_url: string };
+export type FoundAssignment = { material: FoundMaterial; markdown: string };
+
+/** Assignments with a non-empty description, as homework materials plus their Markdown. */
+export function assignmentsToMaterials(list: CanvasAssignment[]): FoundAssignment[] {
+  const out: FoundAssignment[] = [];
+  for (const a of list) {
+    if (!a.description?.replace(/<[^>]*>|&nbsp;|\s/g, "")) continue;
+    const markdown = htmlToMarkdown(a.description);
+    if (!markdown.trim()) continue;
+    out.push({
+      material: {
+        kind: "homework",
+        format: "html",
+        title: clean(a.name),
+        weekLabel: null,
+        sortDate: a.due_at ? dateOf(a.due_at) : null,
+        sourceUrl: a.html_url,
+      },
+      markdown,
+    });
+  }
+  return out;
+}
+
+export async function discoverCanvasAssignments(token: string, courseId: string): Promise<FoundAssignment[]> {
+  return assignmentsToMaterials(await getAll<CanvasAssignment>(`/courses/${courseId}/assignments?per_page=100`, token));
 }
