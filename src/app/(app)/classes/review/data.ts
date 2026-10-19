@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dateOf, today } from "@/lib/dates";
 import { fetchAll } from "@/lib/classes/cards/fetch-all";
 import { isGraduated, type CardState } from "@/lib/classes/cards/fsrs";
-import { pace, planDay, secondsPerCard, type Level, type PlanCard } from "@/lib/classes/cards/plan";
+import { alternateCourses, pace, planDay, secondsPerCard, type Level, type PlanCard } from "@/lib/classes/cards/plan";
 
 export type ReviewCard = {
   id: string;
@@ -18,12 +18,7 @@ export type ReviewCard = {
   last_review: string | null;
 };
 
-export async function getStudyOverview(): Promise<{
-  dueCount: number;
-  estMinutes: number;
-  pace: { percent: number; behindBy: number } | null;
-  queue: string[];
-}> {
+async function loadPlanningState() {
   const supabase = await createClient();
   const now = new Date();
   const day = today();
@@ -101,6 +96,17 @@ export async function getStudyOverview(): Promise<{
     ),
   );
 
+  return { cards, unlockedConceptIds, now, day, target, budgetMinutes, introducedToday, spentSecondsToday, perCard };
+}
+
+export async function getStudyOverview(): Promise<{
+  dueCount: number;
+  estMinutes: number;
+  pace: { percent: number; behindBy: number } | null;
+  queue: string[];
+}> {
+  const { cards, unlockedConceptIds, now, day, target, budgetMinutes, introducedToday, spentSecondsToday, perCard } =
+    await loadPlanningState();
   const plan = planDay({
     cards,
     unlockedConceptIds,
@@ -123,6 +129,21 @@ export async function getStudyOverview(): Promise<{
       : null,
     queue: plan.queue,
   };
+}
+
+/**
+ * Up to `n` not-yet-introduced cards beyond today's budget, in planner order (explain first, then
+ * unlocked deeper), skipping `excludeIds` (cards already in the client's queue).
+ */
+export async function getExtraQueue(n: number, excludeIds: string[]): Promise<string[]> {
+  const { cards, unlockedConceptIds } = await loadPlanningState();
+  const skip = new Set(excludeIds);
+  const fresh = cards.filter((c) => !c.introduced && !skip.has(c.id));
+  const explain = fresh.filter((c) => c.level === "explain");
+  const deeper = fresh.filter(
+    (c) => c.level !== "explain" && c.concept_id !== null && unlockedConceptIds.has(c.concept_id),
+  );
+  return [...alternateCourses(explain), ...alternateCourses(deeper)].slice(0, n).map((c) => c.id);
 }
 
 /** Cards for the given ids, in the order of `ids`. */

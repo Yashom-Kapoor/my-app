@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { rate, type CardState, type Grade } from "@/lib/classes/cards/fsrs";
 import { shouldApplyRating } from "@/lib/classes/cards/rate-guard";
 import type { ActionState } from "../actions";
+import { getCards, getExtraQueue, type ReviewCard } from "./data";
 
 const gradeSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
 
@@ -18,7 +19,7 @@ export async function rateCard(
   grade: Grade,
   seenLastReview: string | null,
   seconds: number,
-): Promise<{ ok: boolean }> {
+): Promise<{ ok: boolean; lastReview?: string | null }> {
   const g = gradeSchema.safeParse(grade);
   if (!g.success) return { ok: false };
   const supabase = await createClient();
@@ -61,7 +62,7 @@ export async function rateCard(
     scheduled_days: log.scheduled_days,
     seconds: Math.round(Math.min(600, Math.max(0, Number.isFinite(seconds) ? seconds : 0))),
   });
-  return { ok: !logError };
+  return logError ? { ok: false } : { ok: true, lastReview: next.last_review };
 }
 
 export async function deleteCard(id: string) {
@@ -92,4 +93,17 @@ export async function saveStudySettings(_prev: ActionState, formData: FormData):
   if (error) return { ok: false, error: error.message };
   refresh();
   return { ok: true };
+}
+
+const idsSchema = z.array(z.string().uuid()).max(500);
+
+/** Cards for the next page of the client's queue. */
+export async function loadCards(ids: string[]): Promise<ReviewCard[]> {
+  return getCards(idsSchema.parse(ids));
+}
+
+/** "Learn 20 more": the next not-yet-introduced cards beyond today's budget. */
+export async function loadExtraCards(excludeIds: string[]): Promise<{ ids: string[]; cards: ReviewCard[] }> {
+  const ids = await getExtraQueue(20, idsSchema.parse(excludeIds));
+  return { ids, cards: await getCards(ids) };
 }

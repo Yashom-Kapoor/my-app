@@ -81,7 +81,7 @@ const byOrder = (a: PlanCard, b: PlanCard) =>
   a.material_order - b.material_order || a.concept_position - b.concept_position;
 
 /** Sort per course by (material_order, concept_position), then round-robin across courses. */
-function alternateCourses(cards: PlanCard[]): PlanCard[] {
+export function alternateCourses(cards: PlanCard[]): PlanCard[] {
   const byCourse = new Map<string, PlanCard[]>();
   for (const c of cards) {
     const list = byCourse.get(c.course_id) ?? [];
