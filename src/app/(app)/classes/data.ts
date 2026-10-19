@@ -1,4 +1,5 @@
 import "server-only";
+import { rawToBlob } from "@/lib/classes/materials/notebook";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getConnections() {
@@ -99,7 +100,7 @@ export type MaterialDetail = NonNullable<Awaited<ReturnType<typeof getMaterial>>
 
 /** Short-lived link to the stored original, falling back to where it was found. */
 export async function getOriginalUrl(material: { storage_path: string | null; source_url: string }) {
-  if (!material.storage_path) return material.source_url;
+  if (!material.storage_path) return rawToBlob(material.source_url) ?? material.source_url;
   const supabase = await createClient();
   const { data } = await supabase.storage.from("materials").createSignedUrl(material.storage_path, 60 * 60);
   return data?.signedUrl ?? material.source_url;

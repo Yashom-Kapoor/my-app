@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { datahubToRaw, notebookToMarkdown } from "./notebook";
+import { datahubToRaw, notebookToMarkdown, rawToBlob } from "./notebook";
 
 const base = "https://data101.datahub.berkeley.edu/hub/user-redirect/git-pull?";
 const raw1 = "https://raw.githubusercontent.com/data-101-berkeley/fa26-materials/main/proj/proj1/proj1.ipynb";
@@ -25,5 +25,12 @@ describe("notebookToMarkdown", () => {
       { cell_type: "code", source: ["SELECT 1;"], outputs: [{ text: "1" }] },
     ] };
     expect(notebookToMarkdown(nb)).toBe("# Title\ntext\n\n```python\nSELECT 1;\n```");
+  });
+});
+
+describe("rawToBlob", () => {
+  it("maps a raw URL to the rendered blob page", () => {
+    expect(rawToBlob(raw1)).toBe("https://github.com/data-101-berkeley/fa26-materials/blob/main/proj/proj1/proj1.ipynb");
+    expect(rawToBlob("https://example.com/x")).toBeNull();
   });
 });

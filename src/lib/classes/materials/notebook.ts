@@ -30,3 +30,9 @@ export function notebookToMarkdown(json: unknown): string {
     .filter(Boolean)
     .join("\n\n");
 }
+
+/** Raw GitHub URL → the rendered blob page, for "Open original" links; null if it isn't one. */
+export function rawToBlob(url: string): string | null {
+  const m = url.match(/^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/);
+  return m ? `https://github.com/${m[1]}/${m[2]}/blob/${m[3]}/${m[4]}` : null;
+}
