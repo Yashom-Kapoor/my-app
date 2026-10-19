@@ -14,7 +14,7 @@ let query = db
   .from("materials")
   .select("id, title, status, page_count, course:courses ( code )")
   .eq("user_id", userId)
-  .neq("format", "html")
+  .not("format", "in", "(html,ipynb)")
   .order("processed_at");
 if (ids.length) query = query.in("id", ids);
 if (since) query = query.gte("processed_at", since);

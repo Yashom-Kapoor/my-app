@@ -48,13 +48,13 @@ export async function getCourse(id: string) {
   return data;
 }
 
-/** Materials still waiting for the ingest-materials skill (HTML readings convert on their own). */
+/** Materials still waiting for the ingest-materials skill (HTML readings and notebooks convert on their own). */
 export async function getWaitingMaterialCount() {
   const supabase = await createClient();
   const { count } = await supabase
     .from("materials")
     .select("id", { count: "exact", head: true })
-    .neq("format", "html")
+    .not("format", "in", "(html,ipynb)")
     .in("status", ["pending", "processing", "failed"]);
   return count ?? 0;
 }

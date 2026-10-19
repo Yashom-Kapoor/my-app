@@ -11,7 +11,7 @@ let query = db
   .from("materials")
   .select("id, kind, format, title, status, error, source_url, sort_date, course:courses!inner ( code )")
   .eq("user_id", userId)
-  .neq("format", "html")
+  .not("format", "in", "(html,ipynb)")
   .in("status", ["pending", "processing", "failed"])
   .order("sort_date", { ascending: true, nullsFirst: false })
   .limit(limit);

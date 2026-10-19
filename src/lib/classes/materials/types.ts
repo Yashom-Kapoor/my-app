@@ -1,7 +1,7 @@
 // Shapes shared by the material discovery adapters.
 
-export type MaterialKind = "slides" | "discussion" | "solutions" | "exam_prep" | "exam" | "notes" | "other";
-export type MaterialFormat = "pdf" | "gslides" | "html";
+export type MaterialKind = "slides" | "discussion" | "solutions" | "exam_prep" | "exam" | "notes" | "other" | "project" | "homework";
+export type MaterialFormat = "pdf" | "gslides" | "html" | "ipynb";
 
 export type FoundMaterial = {
   kind: MaterialKind;
@@ -23,4 +23,6 @@ export const KIND_LABELS: Record<MaterialKind, string> = {
   exam: "Exam",
   notes: "Notes",
   other: "Other",
+  project: "Project",
+  homework: "Homework",
 };
