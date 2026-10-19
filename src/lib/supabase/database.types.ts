@@ -121,6 +121,157 @@ export type Database = {
           },
         ]
       }
+      card_reviews: {
+        Row: {
+          card_id: string
+          id: number
+          rating: number
+          reviewed_at: string
+          scheduled_days: number
+          seconds: number | null
+          state_after: number
+          state_before: number
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          id?: never
+          rating: number
+          reviewed_at?: string
+          scheduled_days: number
+          seconds?: number | null
+          state_after: number
+          state_before: number
+          user_id?: string
+        }
+        Update: {
+          card_id?: string
+          id?: never
+          rating?: number
+          reviewed_at?: string
+          scheduled_days?: number
+          seconds?: number | null
+          state_after?: number
+          state_before?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_reviews_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cards: {
+        Row: {
+          back: string
+          concept_id: string
+          course_id: string
+          created_at: string
+          deleted_at: string | null
+          difficulty: number
+          due: string
+          elapsed_days: number
+          front: string
+          id: string
+          key: string
+          lapses: number
+          last_review: string | null
+          learning_steps: number
+          level: string
+          material_id: string
+          other_concept_id: string | null
+          page: number | null
+          reps: number
+          scheduled_days: number
+          stability: number
+          state: number
+          user_id: string
+        }
+        Insert: {
+          back: string
+          concept_id: string
+          course_id: string
+          created_at?: string
+          deleted_at?: string | null
+          difficulty?: number
+          due?: string
+          elapsed_days?: number
+          front: string
+          id?: string
+          key: string
+          lapses?: number
+          last_review?: string | null
+          learning_steps?: number
+          level: string
+          material_id: string
+          other_concept_id?: string | null
+          page?: number | null
+          reps?: number
+          scheduled_days?: number
+          stability?: number
+          state?: number
+          user_id?: string
+        }
+        Update: {
+          back?: string
+          concept_id?: string
+          course_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          difficulty?: number
+          due?: string
+          elapsed_days?: number
+          front?: string
+          id?: string
+          key?: string
+          lapses?: number
+          last_review?: string | null
+          learning_steps?: number
+          level?: string
+          material_id?: string
+          other_concept_id?: string | null
+          page?: number | null
+          reps?: number
+          scheduled_days?: number
+          stability?: number
+          state?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cards_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cards_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cards_other_concept_id_fkey"
+            columns: ["other_concept_id"]
+            isOneToOne: false
+            referencedRelation: "concepts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_connections: {
         Row: {
           last_error: string | null
@@ -150,6 +301,54 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      concepts: {
+        Row: {
+          course_id: string
+          deleted_at: string | null
+          id: string
+          key: string
+          material_id: string
+          position: number
+          title: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          deleted_at?: string | null
+          id?: string
+          key: string
+          material_id: string
+          position: number
+          title: string
+          user_id?: string
+        }
+        Update: {
+          course_id?: string
+          deleted_at?: string | null
+          id?: string
+          key?: string
+          material_id?: string
+          position?: number
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concepts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "concepts_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       courses: {
         Row: {
@@ -355,6 +554,7 @@ export type Database = {
       }
       materials: {
         Row: {
+          cards_hash: string | null
           content_hash: string | null
           course_id: string
           discovered_at: string
@@ -374,6 +574,7 @@ export type Database = {
           week_label: string | null
         }
         Insert: {
+          cards_hash?: string | null
           content_hash?: string | null
           course_id: string
           discovered_at?: string
@@ -393,6 +594,7 @@ export type Database = {
           week_label?: string | null
         }
         Update: {
+          cards_hash?: string | null
           content_hash?: string | null
           course_id?: string
           discovered_at?: string
@@ -448,6 +650,24 @@ export type Database = {
           min?: number | null
           nutrient?: Database["public"]["Enums"]["nutrient"]
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_settings: {
+        Row: {
+          budget_minutes: number
+          target_date: string | null
+          user_id: string
+        }
+        Insert: {
+          budget_minutes?: number
+          target_date?: string | null
+          user_id?: string
+        }
+        Update: {
+          budget_minutes?: number
+          target_date?: string | null
           user_id?: string
         }
         Relationships: []
