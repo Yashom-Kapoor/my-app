@@ -63,13 +63,21 @@ export async function getMaterials(courseId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("materials")
-    .select("id, kind, title, week_label, sort_date, status, error, parent_id, page_count")
+    .select("id, kind, title, week_label, sort_date, status, error, parent_id, page_count, cards(count)")
     .eq("course_id", courseId)
+    .is("cards.deleted_at", null)
     .order("sort_date", { ascending: false, nullsFirst: false })
     .order("title");
   return data ?? [];
 }
 export type MaterialRow = Awaited<ReturnType<typeof getMaterials>>[number];
+
+/** Live (non-deleted) cards in the deck; a head count, so no rows are loaded. */
+export async function getDeckSize() {
+  const supabase = await createClient();
+  const { count } = await supabase.from("cards").select("id", { count: "exact", head: true }).is("deleted_at", null);
+  return count ?? 0;
+}
 
 /** A material with its pages, plus any solutions attached to it (also with pages). */
 export async function getMaterial(id: string) {

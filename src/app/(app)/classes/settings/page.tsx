@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PROVIDER_LABELS, age, currentTime } from "@/lib/classes/format";
 import type { Provider } from "@/lib/classes/types";
 import { getConnections, getCourses } from "../data";
+import { getStudySettings } from "../review/data";
+import { StudyForm } from "./study-form";
 import { ConnectionForm } from "./connection-form";
 import { CourseRow } from "./course-row";
 
@@ -72,7 +74,7 @@ export default function ClassesSettingsPage() {
 }
 
 async function Settings() {
-  const [connections, courses] = await Promise.all([getConnections(), getCourses()]);
+  const [connections, courses, study] = await Promise.all([getConnections(), getCourses(), getStudySettings()]);
   const now = currentTime();
 
   return (
@@ -109,6 +111,18 @@ async function Settings() {
           </Card>
         );
       })}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Study</CardTitle>
+          <CardDescription>
+            Set a date to have learned every concept by and a daily time budget. They shape how many new cards each day brings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <StudyForm targetDate={study.target_date} budgetMinutes={study.budget_minutes} />
+        </CardContent>
+      </Card>
 
       {courses.length > 0 && (
         <Card>

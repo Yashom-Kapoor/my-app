@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { FileStackIcon, SettingsIcon, TriangleAlertIcon } from "lucide-react";
+import { FileStackIcon, LayersIcon, SettingsIcon, TriangleAlertIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PROVIDER_LABELS, age, currentTime } from "@/lib/classes/format";
 import type { Provider } from "@/lib/classes/types";
-import { getAnnouncements, getAssignments, getConnections, getCourses, getWaitingMaterialCount } from "./data";
+import { getDeckSize, getAnnouncements, getAssignments, getConnections, getCourses, getWaitingMaterialCount } from "./data";
 import { AutoSync } from "./_components/auto-sync";
 import { DueList } from "./_components/due-list";
 import { Inbox } from "./_components/inbox";
 import { SyncButton } from "./_components/sync-button";
+import { getStudyOverview } from "./review/data";
 import { toDueItems, toInboxItems } from "./view";
 
 export const metadata: Metadata = { title: "Classes" };
@@ -119,6 +120,10 @@ async function ClassesView() {
         </div>
       )}
 
+      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
+        <ReviewCard />
+      </Suspense>
+
       <nav aria-label="Classes" className="flex flex-wrap gap-2">
         {courses
           .filter((c) => !c.hidden)
@@ -154,5 +159,62 @@ async function ClassesView() {
         </CardContent>
       </Card>
     </>
+  );
+}
+
+/** Streams in on its own: the planner loads every card, so it must not block the rest of the page. */
+async function ReviewCard() {
+  const deckSize = await getDeckSize();
+  if (deckSize === 0) {
+    return (
+      <div className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+        <LayersIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <span>
+          <span className="font-medium">No cards yet</span>{" "}
+          <span className="text-muted-foreground">
+            · run <code className="rounded bg-muted px-1 py-0.5 text-xs">/make-cards</code> in Claude Code
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  const { estMinutes, pace, queue } = await getStudyOverview();
+  // N is today's queue length (what the session will actually show), not plan.dueCount (reviews only).
+  const n = queue.length;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Review</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium">{n > 0 ? `${n} due · ~${estMinutes} min` : "All caught up for today"}</p>
+          <Link href="/classes/review" className={buttonVariants({ size: "sm" })}>
+            Start
+          </Link>
+        </div>
+        {pace && (
+          <div className="space-y-1">
+            <div
+              role="progressbar"
+              aria-valuenow={pace.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Backlog"
+              className="h-2 overflow-hidden rounded-full bg-muted"
+            >
+              <div
+                className={pace.behindBy > 0 ? "h-full bg-destructive" : "h-full bg-primary"}
+                style={{ width: `${pace.percent}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {pace.behindBy > 0 ? `Backlog ${pace.percent}% · behind by ${pace.behindBy}` : `Backlog ${pace.percent}% · on track`}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -162,6 +162,9 @@ function MaterialLink({ courseId, material: m, small }: { courseId: string; mate
         {KIND_LABELS[m.kind as MaterialKind]}
       </span>
       <span className={cn("min-w-0 flex-1 truncate", small ? "text-xs" : "text-sm font-medium")}>{m.title}</span>
+      {m.cards[0]?.count > 0 && (
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{m.cards[0].count} cards</span>
+      )}
       {m.status !== "ready" && (
         <span
           title={m.error ?? undefined}
