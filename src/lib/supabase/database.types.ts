@@ -15,6 +15,181 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcements: {
+        Row: {
+          author: string | null
+          body: string
+          course_id: string
+          external_id: string
+          id: string
+          posted_at: string
+          read_at: string | null
+          source: string
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          author?: string | null
+          body?: string
+          course_id: string
+          external_id: string
+          id?: string
+          posted_at: string
+          read_at?: string | null
+          source: string
+          title: string
+          url?: string | null
+          user_id?: string
+        }
+        Update: {
+          author?: string | null
+          body?: string
+          course_id?: string
+          external_id?: string
+          id?: string
+          posted_at?: string
+          read_at?: string | null
+          source?: string
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          course_id: string
+          done_at: string | null
+          due_at: string | null
+          external_id: string
+          id: string
+          late_due_at: string | null
+          released_at: string | null
+          score: string | null
+          status: string
+          title: string
+          updated_at: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          done_at?: string | null
+          due_at?: string | null
+          external_id: string
+          id?: string
+          late_due_at?: string | null
+          released_at?: string | null
+          score?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Update: {
+          course_id?: string
+          done_at?: string | null
+          due_at?: string | null
+          external_id?: string
+          id?: string
+          late_due_at?: string | null
+          released_at?: string | null
+          score?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_connections: {
+        Row: {
+          last_error: string | null
+          last_synced_at: string | null
+          provider: string
+          secret: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_error?: string | null
+          last_synced_at?: string | null
+          provider: string
+          secret: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          last_error?: string | null
+          last_synced_at?: string | null
+          provider?: string
+          secret?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          canvas_id: string | null
+          code: string
+          created_at: string
+          ed_id: string | null
+          gradescope_id: string | null
+          hidden: boolean
+          id: string
+          name: string
+          term: string | null
+          user_id: string
+        }
+        Insert: {
+          canvas_id?: string | null
+          code: string
+          created_at?: string
+          ed_id?: string | null
+          gradescope_id?: string | null
+          hidden?: boolean
+          id?: string
+          name: string
+          term?: string | null
+          user_id?: string
+        }
+        Update: {
+          canvas_id?: string | null
+          code?: string
+          created_at?: string
+          ed_id?: string | null
+          gradescope_id?: string | null
+          hidden?: boolean
+          id?: string
+          name?: string
+          term?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           archived: boolean
