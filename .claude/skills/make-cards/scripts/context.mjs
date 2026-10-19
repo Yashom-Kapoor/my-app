@@ -51,21 +51,31 @@ context.existing = {
 // so duplicates can be skipped. Capped; fronts truncated.
 const CARD_CAP = 400;
 const sameWeek = m.week_label
-  ? await fetchAll(() => db.from("materials").select("id, title").eq("user_id", userId).eq("course_id", m.course_id).eq("week_label", m.week_label).neq("id", id).order("id"))
+  ? await fetchAll(() =>
+      db.from("materials").select("id, title").eq("user_id", userId).eq("course_id", m.course_id).eq("week_label", m.week_label).neq("id", id).order("sort_date", { ascending: true, nullsFirst: false }).order("id"),
+    )
   : [];
-const related = new Map(sameWeek.map((x) => [x.id, x.title]));
+// Priority order for the cap: parent, then children, then same-week materials oldest first.
+const related = new Map();
 if (m.parent_id) {
   const parent = ok(await db.from("materials").select("id, title").eq("id", m.parent_id).eq("user_id", userId).maybeSingle());
   if (parent) related.set(parent.id, parent.title);
 }
 for (const k of kids) related.set(k.id, k.title);
+for (const x of sameWeek) if (!related.has(x.id)) related.set(x.id, x.title);
 context.course_cards = [];
 if (related.size) {
   const rows = await fetchAll(() =>
     db.from("cards").select("material_id, level, front").eq("user_id", userId).in("material_id", [...related.keys()]).is("deleted_at", null).order("material_id").order("key"),
   );
-  context.course_cards = rows.slice(0, CARD_CAP).map((c) => ({ material_title: related.get(c.material_id), level: c.level, front: c.front.length > 240 ? `${c.front.slice(0, 240)}...` : c.front }));
-  if (rows.length > CARD_CAP) console.log(`course_cards capped at ${CARD_CAP} of ${rows.length}`);
+  const order = [...related.keys()];
+  rows.sort((a, b) => order.indexOf(a.material_id) - order.indexOf(b.material_id));
+  const kept = rows.slice(0, CARD_CAP);
+  context.course_cards = kept.map((c) => ({ material_title: related.get(c.material_id), level: c.level, front: c.front.length > 240 ? `${c.front.slice(0, 240)}...` : c.front }));
+  if (rows.length > CARD_CAP) {
+    const cut = new Set(rows.slice(CARD_CAP).map((c) => related.get(c.material_id)));
+    console.log(`course_cards capped at ${CARD_CAP} of ${rows.length}; truncated or dropped: ${[...cut].join("; ")}`);
+  }
 }
 
 const dir = `.cards/${id}`;
