@@ -42,3 +42,4 @@ next-env.d.ts
 !.env.example
 .playwright-mcp/
 .ingest/
+.cards/

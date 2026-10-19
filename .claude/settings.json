@@ -6,7 +6,11 @@
       "Bash(node .claude/skills/ingest-materials/scripts/save.mjs:*)",
       "Read(./.ingest/**)",
       "Write(./.ingest/**)",
-      "Edit(./.ingest/**)"
+      "Edit(./.ingest/**)",
+      "Bash(node .claude/skills/make-cards/scripts/*.mjs:*)",
+      "Read(./.cards/**)",
+      "Write(./.cards/**)",
+      "Edit(./.cards/**)"
     ]
   }
 }
