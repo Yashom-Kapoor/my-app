@@ -9,10 +9,10 @@ import type { Grade } from "@/lib/classes/cards/fsrs";
 import { Markdown } from "../../_components/markdown";
 import { deleteCard, loadCards, loadExtraCards, rateCard } from "../actions";
 import type { ReviewCard } from "../data";
+import { removeCurrent, requeueAgain } from "./queue";
 
 const PAGE = 20;
 const now = () => Date.now();
-const AGAIN_GAP = 3;
 const GRADES: { grade: Grade; label: string; className: string }[] = [
   { grade: 1, label: "Again", className: "border-red-500/40 text-red-600 dark:text-red-400" },
   { grade: 2, label: "Hard", className: "border-amber-500/40 text-amber-600 dark:text-amber-400" },
@@ -56,11 +56,7 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
       if (res.ok && grade === 1) {
         // Back in 3 cards, carrying the new last_review so its next rating is not seen as stale.
         const again = { ...card, last_review: res.lastReview ?? card.last_review };
-        setQueue((q) => {
-          const next = [...q];
-          next.splice(Math.min(idx + 1 + AGAIN_GAP, next.length), 0, again);
-          return next;
-        });
+        setQueue((q) => requeueAgain(q, idx, again));
       }
       advance();
     } catch {
@@ -75,8 +71,8 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
     busy.current = true;
     try {
       await deleteCard(card.id);
-      // Drop it, and any Again copy, from the queue; the next card slides into this index.
-      setQueue((q) => q.filter((c) => c.id !== card.id));
+      // Drop it, and any later Again copy, from the queue (idx is unchanged); the next card slides into this index.
+      setQueue((q) => removeCurrent(q, idx).queue);
       toast.success("Card deleted");
       setRevealed(false);
       setMenu(false);
