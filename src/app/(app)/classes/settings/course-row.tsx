@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { mergeCourse, updateCourse, type ActionState } from "../actions";
 
-type Course = { id: string; code: string; name: string; hidden: boolean; sources: string };
+type Course = { id: string; code: string; name: string; hidden: boolean; websiteUrl: string | null; sources: string };
 
 export function CourseRow({ course, others }: { course: Course; others: { id: string; code: string }[] }) {
   const [merging, startMerge] = useTransition();
@@ -25,6 +25,14 @@ export function CourseRow({ course, others }: { course: Course; others: { id: st
           <Input name="code" defaultValue={course.code} aria-label="Code" className="w-28" required />
           <Input name="name" defaultValue={course.name} aria-label="Name" required />
         </div>
+        <Input
+          name="website_url"
+          type="url"
+          inputMode="url"
+          defaultValue={course.websiteUrl ?? ""}
+          placeholder="Course website (for materials), e.g. https://fa26.cs161.org/"
+          aria-label="Course website"
+        />
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>{course.sources}</span>
           <label className="flex items-center gap-1.5">

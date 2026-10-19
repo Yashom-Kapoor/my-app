@@ -1,25 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { SettingsIcon, TriangleAlertIcon } from "lucide-react";
+import { FileStackIcon, SettingsIcon, TriangleAlertIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  PROVIDER_LABELS,
-  age,
-  currentTime,
-  dueGroup,
-  formatDateTime,
-  formatScore,
-  parseScore,
-  relativeTime,
-} from "@/lib/classes/format";
+import { PROVIDER_LABELS, age, currentTime } from "@/lib/classes/format";
 import type { Provider } from "@/lib/classes/types";
-import { getAnnouncements, getAssignments, getConnections } from "./data";
+import { getAnnouncements, getAssignments, getConnections, getCourses, getWaitingMaterialCount } from "./data";
 import { AutoSync } from "./_components/auto-sync";
-import { DueList, type DueItem } from "./_components/due-list";
-import { Inbox, type InboxItem } from "./_components/inbox";
+import { DueList } from "./_components/due-list";
+import { Inbox } from "./_components/inbox";
 import { SyncButton } from "./_components/sync-button";
+import { toDueItems, toInboxItems } from "./view";
 
 export const metadata: Metadata = { title: "Classes" };
 // Syncing several sources can take a while; this also covers the page's server actions.
@@ -50,10 +42,12 @@ function Header({ syncLabel }: { syncLabel: string | null }) {
 }
 
 async function ClassesView() {
-  const [connections, assignments, announcements] = await Promise.all([
+  const [connections, assignments, announcements, courses, waiting] = await Promise.all([
     getConnections(),
     getAssignments(),
     getAnnouncements(),
+    getCourses(),
+    getWaitingMaterialCount(),
   ]);
   const now = currentTime();
 
@@ -83,49 +77,8 @@ async function ClassesView() {
     .at(-1);
   const broken = connections.filter((c) => c.status !== "ok");
 
-  const due: DueItem[] = assignments.map((a) => {
-    const lateOpen = !!a.late_due_at && Date.parse(a.late_due_at) > now;
-    const canSubmit = lateOpen || (!!a.due_at && Date.parse(a.due_at) > now);
-    // Online assignments score each answer as it's saved, so a graded score below the max with
-    // submissions still open means the work isn't finished yet.
-    const score = parseScore(a.score);
-    const partial = a.status === "graded" && !!score && score.earned < score.max && canSubmit;
-    return {
-      id: a.id,
-      title: a.title,
-      url: a.url,
-      course: a.course.code,
-      group: dueGroup(a.due_at, now),
-      dueLabel: a.due_at ? `Due ${formatDateTime(a.due_at)}` : null,
-      relative: a.due_at ? relativeTime(a.due_at, now) : null,
-      lateLabel:
-        lateOpen && a.due_at && Date.parse(a.due_at) < now ? `Late until ${formatDateTime(a.late_due_at!)}` : null,
-      statusLabel: partial
-        ? formatScore(score)
-        : a.status === "graded"
-          ? a.score
-          : a.status === "submitted"
-            ? "Submitted"
-            : null,
-      complete: a.status === "submitted" || (a.status === "graded" && !partial),
-      partial,
-      done: !!a.done_at,
-    };
-  });
-
-  const inbox: InboxItem[] = announcements.map((a) => ({
-    id: a.id,
-    title: a.title,
-    body: a.body,
-    author: a.author,
-    url: a.url,
-    source: a.source,
-    courseId: a.course.id,
-    course: a.course.code,
-    age: age(a.posted_at, now),
-    postedLabel: formatDateTime(a.posted_at),
-    read: !!a.read_at,
-  }));
+  const due = toDueItems(assignments, now);
+  const inbox = toInboxItems(announcements, now);
   const unread = inbox.filter((i) => !i.read).length;
 
   return (
@@ -150,6 +103,31 @@ async function ClassesView() {
           </span>
         </Link>
       ))}
+
+      {waiting > 0 && (
+        <div className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+          <FileStackIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <span>
+            <span className="font-medium">
+              {waiting} new {waiting === 1 ? "material" : "materials"} waiting.
+            </span>{" "}
+            <span className="text-muted-foreground">
+              Run <code className="rounded bg-muted px-1 py-0.5 text-xs">/ingest-materials</code> in Claude Code to
+              transcribe them.
+            </span>
+          </span>
+        </div>
+      )}
+
+      <nav aria-label="Classes" className="flex flex-wrap gap-2">
+        {courses
+          .filter((c) => !c.hidden)
+          .map((c) => (
+            <Link key={c.id} href={`/classes/${c.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              {c.code}
+            </Link>
+          ))}
+      </nav>
 
       <Card>
         <CardHeader>

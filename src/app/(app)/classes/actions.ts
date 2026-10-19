@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient, getUser } from "@/lib/supabase/server";
 import { encrypt } from "@/lib/classes/crypto";
 import { normalizeCookie } from "@/lib/classes/gradescope";
+import { discoverMaterials } from "@/lib/classes/materials/discover";
 import { syncAll } from "@/lib/classes/sync";
 import type { Provider } from "@/lib/classes/types";
 
@@ -51,10 +52,13 @@ export async function removeConnection(provider: Provider) {
   refresh();
 }
 
+/** Full sync, plus materials discovery (skipped on page-open syncs to keep those quick). */
 export async function syncNow(): Promise<ActionState> {
-  const failed = (await sync(false)).filter((r) => !r.ok);
+  const errors = (await sync(false)).filter((r) => !r.ok).map((r) => `${r.provider}: ${r.error}`);
+  const user = await getUser();
+  if (user) errors.push(...(await discoverMaterials(await createClient(), user.sub)));
   refresh();
-  return failed.length ? { ok: false, error: failed.map((r) => `${r.provider}: ${r.error}`).join("; ") } : { ok: true };
+  return errors.length ? { ok: false, error: errors.join("; ") } : { ok: true };
 }
 
 /** Called when the Classes page opens; only syncs sources older than the stale window. */
@@ -95,6 +99,7 @@ const courseSchema = z.object({
   code: z.string().trim().min(1, "Enter a code").max(40),
   name: z.string().trim().min(1, "Enter a name").max(120),
   hidden: z.boolean(),
+  website_url: z.union([z.literal(""), z.url({ protocol: /^https?$/, error: "Enter a full https:// URL" })]).transform((u) => u || null),
 });
 
 export async function updateCourse(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -103,6 +108,7 @@ export async function updateCourse(_prev: ActionState, formData: FormData): Prom
     code: formData.get("code"),
     name: formData.get("name"),
     hidden: formData.get("hidden") === "on",
+    website_url: String(formData.get("website_url") ?? "").trim(),
   });
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   const { id, ...fields } = parsed.data;

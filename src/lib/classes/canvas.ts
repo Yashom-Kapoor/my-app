@@ -4,11 +4,12 @@ import { ANNOUNCEMENT_WINDOW_DAYS, ExpiredError, type RemoteAnnouncement, type R
 
 // bCourses is Berkeley's Canvas instance; a personal access token reads the REST API.
 
-const BASE = process.env.CANVAS_BASE_URL ?? "https://bcourses.berkeley.edu";
+export const CANVAS_BASE = process.env.CANVAS_BASE_URL ?? "https://bcourses.berkeley.edu";
 
-async function getAll<T>(path: string, token: string): Promise<T[]> {
+/** GET a Canvas endpoint, following pagination. A single-object response comes back as one item. */
+export async function getAll<T>(path: string, token: string): Promise<T[]> {
   const out: T[] = [];
-  let url: string | null = `${BASE}/api/v1${path}`;
+  let url: string | null = `${CANVAS_BASE}/api/v1${path}`;
   for (let pageNo = 0; url && pageNo < 20; pageNo++) {
     const res: Response = await fetch(url, {
       headers: { authorization: `Bearer ${token}`, accept: "application/json" },
@@ -16,7 +17,8 @@ async function getAll<T>(path: string, token: string): Promise<T[]> {
     });
     if (res.status === 401) throw new ExpiredError("bCourses token was rejected");
     if (!res.ok) throw new Error(`bCourses returned ${res.status}`);
-    out.push(...((await res.json()) as T[]));
+    const body = (await res.json()) as T | T[];
+    out.push(...(Array.isArray(body) ? body : [body]));
     // Canvas paginates with a Link header.
     url = res.headers.get("link")?.match(/<([^>]+)>;\s*rel="next"/)?.[1] ?? null;
   }

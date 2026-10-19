@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/skills/ingest-materials/scripts/pending.mjs:*)",
+      "Bash(node .claude/skills/ingest-materials/scripts/prepare.mjs:*)",
+      "Bash(node .claude/skills/ingest-materials/scripts/save.mjs:*)",
+      "Read(./.ingest/**)",
+      "Write(./.ingest/**)",
+      "Edit(./.ingest/**)"
+    ]
+  }
+}

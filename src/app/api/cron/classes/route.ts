@@ -1,9 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { createAdminClient, getOwnerId } from "@/lib/supabase/admin";
+import { discoverMaterials } from "@/lib/classes/materials/discover";
 import { syncAll } from "@/lib/classes/sync";
 
-// Daily Vercel cron (vercel.json). Runs the full sync for the single user so due dates stay fresh
-// and the Gradescope session stays warm even on days the app isn't opened.
+// Daily Vercel cron (vercel.json). Runs the full sync and materials discovery for the single user so
+// due dates stay fresh and the Gradescope session stays warm even on days the app isn't opened.
 export const maxDuration = 120;
 
 function authorized(request: Request) {
@@ -19,5 +20,6 @@ export async function GET(request: Request) {
   const userId = await getOwnerId(admin);
   if (!userId) return Response.json({ error: "Owner not found" }, { status: 500 });
   const results = await syncAll(admin, userId);
-  return Response.json({ results });
+  const materialErrors = await discoverMaterials(admin, userId);
+  return Response.json({ results, materialErrors });
 }

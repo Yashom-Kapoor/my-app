@@ -131,3 +131,62 @@
     @apply font-sans;
   }
 }
+/* Transcribed course materials (Markdown rendered by react-markdown). */
+@layer components {
+  .markdown {
+    @apply text-[15px] leading-relaxed break-words;
+  }
+  .markdown > * + * {
+    @apply mt-3;
+  }
+  .markdown h1 {
+    @apply text-xl font-semibold tracking-tight;
+  }
+  .markdown h2 {
+    @apply text-lg font-semibold tracking-tight;
+  }
+  .markdown h3,
+  .markdown h4 {
+    @apply font-semibold;
+  }
+  .markdown :is(h1, h2, h3, h4) {
+    @apply mt-5 first:mt-0;
+  }
+  .markdown ul {
+    @apply list-disc pl-5;
+  }
+  .markdown ol {
+    @apply list-decimal pl-5;
+  }
+  .markdown li + li,
+  .markdown li > :is(ul, ol) {
+    @apply mt-1;
+  }
+  .markdown a {
+    @apply underline underline-offset-2;
+  }
+  .markdown blockquote {
+    @apply border-l-2 pl-3 text-muted-foreground;
+  }
+  .markdown :not(pre) > code {
+    @apply rounded bg-muted px-1 py-0.5 text-[0.85em];
+  }
+  .markdown pre {
+    @apply overflow-x-auto rounded-lg bg-muted p-3 text-[13px] leading-snug;
+  }
+  .markdown table {
+    @apply block overflow-x-auto text-sm;
+  }
+  .markdown :is(th, td) {
+    @apply border px-2 py-1 text-left align-top;
+  }
+  .markdown th {
+    @apply bg-muted font-medium;
+  }
+  .markdown .katex-display {
+    @apply overflow-x-auto overflow-y-hidden py-1;
+  }
+  .markdown img {
+    @apply max-w-full;
+  }
+}

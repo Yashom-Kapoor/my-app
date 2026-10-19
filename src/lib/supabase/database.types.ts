@@ -163,6 +163,7 @@ export type Database = {
           name: string
           term: string | null
           user_id: string
+          website_url: string | null
         }
         Insert: {
           canvas_id?: string | null
@@ -175,6 +176,7 @@ export type Database = {
           name: string
           term?: string | null
           user_id?: string
+          website_url?: string | null
         }
         Update: {
           canvas_id?: string | null
@@ -187,6 +189,7 @@ export type Database = {
           name?: string
           term?: string | null
           user_id?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -317,6 +320,113 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      material_pages: {
+        Row: {
+          markdown: string
+          material_id: string
+          needs_review: boolean
+          page: number
+          user_id: string
+        }
+        Insert: {
+          markdown: string
+          material_id: string
+          needs_review?: boolean
+          page: number
+          user_id?: string
+        }
+        Update: {
+          markdown?: string
+          material_id?: string
+          needs_review?: boolean
+          page?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_pages_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materials: {
+        Row: {
+          content_hash: string | null
+          course_id: string
+          discovered_at: string
+          error: string | null
+          format: string
+          id: string
+          kind: string
+          page_count: number | null
+          parent_id: string | null
+          processed_at: string | null
+          sort_date: string | null
+          source_url: string
+          status: string
+          storage_path: string | null
+          title: string
+          user_id: string
+          week_label: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          course_id: string
+          discovered_at?: string
+          error?: string | null
+          format: string
+          id?: string
+          kind: string
+          page_count?: number | null
+          parent_id?: string | null
+          processed_at?: string | null
+          sort_date?: string | null
+          source_url: string
+          status?: string
+          storage_path?: string | null
+          title: string
+          user_id?: string
+          week_label?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          course_id?: string
+          discovered_at?: string
+          error?: string | null
+          format?: string
+          id?: string
+          kind?: string
+          page_count?: number | null
+          parent_id?: string | null
+          processed_at?: string | null
+          sort_date?: string | null
+          source_url?: string
+          status?: string
+          storage_path?: string | null
+          title?: string
+          user_id?: string
+          week_label?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materials_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materials_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       nutrition_goals: {
         Row: {

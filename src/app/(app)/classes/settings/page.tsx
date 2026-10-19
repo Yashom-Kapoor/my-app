@@ -128,6 +128,7 @@ async function Settings() {
                     code: c.code,
                     name: c.name,
                     hidden: c.hidden,
+                    websiteUrl: c.website_url,
                     sources: [c.gradescope_id && "Gradescope", c.canvas_id && "bCourses", c.ed_id && "Ed"]
                       .filter(Boolean)
                       .join(" + "),
