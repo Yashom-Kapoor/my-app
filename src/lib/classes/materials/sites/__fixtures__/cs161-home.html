@@ -1,0 +1,725 @@
+
+
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+  <link rel="stylesheet" href="/assets/css/just-the-docs-default.css">
+
+  <link rel="stylesheet" href="/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet">
+
+  <style id="jtd-nav-activation">
+  
+    .site-nav ul li a {
+      background-image: none;
+    }
+
+  </style>
+
+  
+
+  
+    <script src="/assets/js/vendor/lunr.min.js"></script>
+  
+
+  <script src="/assets/js/just-the-docs.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+
+  <!-- Begin Jekyll SEO tag v2.9.1 -->
+<title>CS161 Fall 2026 | Computer Security at UC Berkeley</title>
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="CS161 Fall 2026" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Computer Security at UC Berkeley" />
+<meta name="twitter:description" property="og:description" content="Computer Security at UC Berkeley" />
+<link rel="canonical" href="https://fa26.cs161.org/" />
+<meta property="og:url" content="https://fa26.cs161.org/" />
+<meta property="og:site_name" content="CS161 Fall 2026" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="CS161 Fall 2026" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Computer Security at UC Berkeley","headline":"CS161 Fall 2026","name":"CS161 Fall 2026","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"https://fa26.cs161.org/"}},"url":"https://fa26.cs161.org/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+  <link
+  rel="preload"
+  href="/assets/css/just-the-docs-dark.css"
+  as="style"
+>
+
+<!-- Intentionally duplicates the default theme stylesheet so there's a fallback when changing themes -->
+<link
+  id="jtdThemeCSS"
+  rel="stylesheet"
+  href="/assets/css/just-the-docs-default.css"
+>
+
+<script>
+  /* Script to enable persistent dark mode. */
+
+  jtd.getTheme = function () {
+    var cssFileHref = (
+      document.getElementById('jtdThemeCSS') || document.querySelector('[rel="stylesheet"]')
+    ).getAttribute('href');
+    return cssFileHref.substring(cssFileHref.lastIndexOf('-') + 1, cssFileHref.length - 4);
+  };
+
+  jtd.setTheme = function (theme) {
+    var cssFile = document.getElementById('jtdThemeCSS') || document.querySelector('[rel="stylesheet"]');
+    cssFile.setAttribute('href', cssFile.getAttribute('href').replace(jtd.getTheme(), theme));
+  };
+
+  let toggleDark = () => {
+    let setDark = jtd.getTheme() !== 'dark';
+    document.documentElement.setAttribute('data-theme', setDark ? 'dark' : 'default');
+    document.documentElement.setAttribute('data-theme', setDark ? 'dark' : 'default');
+    jtd.setTheme(setDark ? 'dark' : 'default');
+    localStorage.setItem('darkMode', String(setDark));
+
+    if (typeof calendar !== 'undefined') {
+      calendar.setColorScheme(setDark ? 'dark' : 'light');
+    }
+  };
+
+  if (localStorage.getItem('darkMode') === 'true') {
+    toggleDark();
+  }
+</script>
+
+<!-- Script for LaTeX rendering. -->
+<link
+  rel="stylesheet"
+  href="/assets/katex/katex.min.css"
+>
+<script defer src="/assets/katex/katex.min.js"></script>
+<script>
+  function renderKaTeX() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true },
+      ],
+    });
+  }
+</script>
+<script
+  defer
+  src="/assets/katex/contrib/auto-render.min.js"
+  onload="renderKaTeX();"
+></script>
+
+
+</head>
+
+<body>
+  <a class="skip-to-main" href="#main-content">Skip to main content</a>
+  <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
+  <symbol id="svg-link" viewBox="0 0 24 24">
+  <title>Link</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+</symbol>
+
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+  <title>Menu</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu">
+    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+  </svg>
+</symbol>
+
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+  <title>Expand</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+    <polyline points="9 18 15 12 9 6"></polyline>
+  </svg>
+</symbol>
+
+  <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE -->
+<symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link">
+  <title id="svg-external-link-title">(external link)</title>
+  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line>
+</symbol>
+
+  
+    <symbol id="svg-doc" viewBox="0 0 24 24">
+  <title>Document</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file">
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+  </svg>
+</symbol>
+
+    <symbol id="svg-search" viewBox="0 0 24 24">
+  <title>Search</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search">
+    <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+  </svg>
+</symbol>
+
+  
+  
+    <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md -->
+<symbol id="svg-copy" viewBox="0 0 16 16">
+  <title>Copy</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+  </svg>
+</symbol>
+<symbol id="svg-copied" viewBox="0 0 16 16">
+  <title>Copied</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16">
+    <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/>
+    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/>
+  </svg>
+</symbol>
+
+  
+</svg>
+
+  
+    <div class="side-bar">
+  <div class="site-header" role="banner">
+    <a href="/" class="site-title lh-tight">
+
+
+  CS161 Fall 2026
+
+</a>
+    <button id="menu-button" class="site-button btn-reset" aria-label="Menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg>
+    </button>
+  </div>
+
+  <nav aria-label="Main" id="site-nav" class="site-nav">
+  
+  
+    <ul class="nav-list"><li class="nav-list-item"><a href="/calendar/" class="nav-list-link">Calendar</a></li><li class="nav-list-item"><a href="/policies/" class="nav-list-link">Policies</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Resources submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/resources/" class="nav-list-link">Resources</a><ul class="nav-list"><li class="nav-list-item"><a href="/resources/faqs/" class="nav-list-link">Fall 2026 FAQs</a></li><li class="nav-list-item"><a href="/resources/instructional-machine/" class="nav-list-link">Instructional Machine Setup</a></li></ul></li><li class="nav-list-item"><a href="/staff/" class="nav-list-link">Staff</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Project 1 submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/proj1/" class="nav-list-link">Project 1</a><ul class="nav-list"><li class="nav-list-item"><a href="/proj1/getting-started/" class="nav-list-link">Getting Started</a></li><li class="nav-list-item"><a href="/proj1/customizing/" class="nav-list-link">Customizing</a></li><li class="nav-list-item"><a href="/proj1/q1/" class="nav-list-link">Question 1: Remus</a></li><li class="nav-list-item"><a href="/proj1/q2/" class="nav-list-link">Question 2: Spica</a></li><li class="nav-list-item"><a href="/proj1/q3/" class="nav-list-link">Question 3: Polaris</a></li><li class="nav-list-item"><a href="/proj1/q4/" class="nav-list-link">Question 4: Vega</a></li><li class="nav-list-item"><a href="/proj1/q5/" class="nav-list-link">Question 5: Deneb</a></li><li class="nav-list-item"><a href="/proj1/q6/" class="nav-list-link">Question 6: Antares</a></li><li class="nav-list-item"><a href="/proj1/q7/" class="nav-list-link">Question 7: Rigel</a></li><li class="nav-list-item"><a href="/proj1/deliverables/" class="nav-list-link">Deliverables</a></li><li class="nav-list-item"><a href="/proj1/vm-debugging/" class="nav-list-link">Troubleshooting</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="Project 2 submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button><a href="/proj2/" class="nav-list-link">Project 2</a><ul class="nav-list"><li class="nav-list-item"><a href="/proj2/story/" class="nav-list-link">Story</a></li><li class="nav-list-item"><a href="/proj2/policies/" class="nav-list-link">Project 2 Policies and Deliverables</a></li><li class="nav-list-item"><a href="/proj2/getting-started/" class="nav-list-link">Getting Started</a></li><li class="nav-list-item"><a href="/proj2/overview/" class="nav-list-link">Design Overview</a></li><li class="nav-list-item"><a href="/proj2/library/" class="nav-list-link">Library Functions</a></li><li class="nav-list-item"><a href="/proj2/userauth/" class="nav-list-link">Users And User Authentication</a></li><li class="nav-list-item"><a href="/proj2/files/" class="nav-list-link">File Operations</a></li><li class="nav-list-item"><a href="/proj2/sharing/" class="nav-list-link">Sharing and Revocation</a></li><li class="nav-list-item"><a href="/proj2/troubleshooting/" class="nav-list-link">Debugging and Errors</a></li><li class="nav-list-item"><a href="/proj2/advice/" class="nav-list-link">Advice and Tips</a></li><li class="nav-list-item"><a href="/proj2/appendix/" class="nav-list-link">Appendix</a></li></ul></li><li class="nav-list-item"><a href="/DUEs/" class="nav-list-link">DUEs</a></li></ul>
+  
+</nav>
+
+
+
+
+  
+  
+    <div class="site-footer">
+	Report an <a href="https://dap.berkeley.edu/get-help/report-web-accessibility-issue">accessibility issue</a>.
+
+	<br><br>
+
+	This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll.
+</div>
+  
+</div>
+
+  
+  <div class="main" id="top">
+    <div id="main-header" class="main-header">
+  
+    
+
+<div class="search" role="search">
+  <div class="search-input-wrap">
+    <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search CS161 Fall 2026" autocomplete="off">
+    <label for="search-input" class="search-label">
+      <span class="sr-only">Search CS161 Fall 2026</span>
+      <svg viewBox="0 0 24 24" class="search-icon" aria-hidden="true"><use xlink:href="#svg-search"></use></svg>
+    </label>
+  </div>
+  <div id="search-results" class="search-results"></div>
+</div>
+
+  
+  
+  
+    <nav aria-label="Auxiliary" class="aux-nav">
+  <ul class="aux-nav-list">
+    
+      <li class="aux-nav-list-item">
+        <a href="#" class="site-button"
+          
+        >
+          Dark Mode
+        </a>
+      </li>
+    
+      <li class="aux-nav-list-item">
+        <a href="https://edstem.org" class="site-button"
+          
+        >
+          Ed
+        </a>
+      </li>
+    
+      <li class="aux-nav-list-item">
+        <a href="https://oh.cs161.org" class="site-button"
+          
+        >
+          OH Queue
+        </a>
+      </li>
+    
+      <li class="aux-nav-list-item">
+        <a href="https://textbook.cs161.org/" class="site-button"
+          
+        >
+          Textbook
+        </a>
+      </li>
+    
+      <li class="aux-nav-list-item">
+        <a href="https://forms.gle/EspgR1rvhvd5DHGs9" class="site-button"
+          
+        >
+          Feedback
+        </a>
+      </li>
+    
+      <li class="aux-nav-list-item">
+        <a href="https://flextensions.berkeley.edu/" class="site-button"
+          
+        >
+          Extensions
+        </a>
+      </li>
+    
+  </ul>
+</nav>
+
+  
+</div>
+
+    <div class="main-content-wrap">
+      
+      <div id="main-content" class="main-content">
+        <main>
+          
+            <p><img alt="CS161 Fall 2026 logo" width="200px" style="float: right" src="/assets/images/logo-large.png" /></p>
+<h1 id="cs161-fall-2026">
+  
+  
+    <a href="#cs161-fall-2026" class="anchor-heading" aria-labelledby="cs161-fall-2026"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> CS161 Fall 2026
+  
+  
+</h1>
+    
+
+<p><span style="white-space: nowrap;">
+    <strong>Instructors</strong>: David Wagner, Peyrin Kao /</span>
+<span style="white-space: nowrap;">
+    <strong>Lecture</strong>: MWF, 12:00–1:00 PM, <a href="https://dac.berkeley.edu/wayfinding/campus-buildings/physics-building">Physics Building 1</a></span>
+<span style="white-space: nowrap;">
+    [<a href="https://berkeley.zoom.us/j/96236579219?pwd=CHpJctn6QM4ss47VawH9cYDbnGI2wP.1">Zoom</a>, <a href="https://www.youtube.com/playlist?list=PLJTQO2r98KU8">Playlist</a>]
+</span></p>
+<h2 id="announcements">
+  
+  
+    <a href="#announcements" class="anchor-heading" aria-labelledby="announcements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Announcements
+  
+  
+</h2>
+    
+
+<div class="announcement">
+<h2>
+  
+  
+    <a href="#announcements" class="anchor-heading" aria-labelledby="announcements"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Week 8 Announcements
+  
+  
+</h2>
+    
+  <span class="announcement-meta">
+    
+      Oct 12
+    
+  </span>
+  <div>
+    <ul>
+  <li>This is the <strong>last week</strong> we holding DUEs for Project 1. Please refer to <a href="https://edstem.org/us/courses/102316/discussion/threads/167">#167</a> for more information.
+    <ul>
+      <li>Please try to sign up for one of the open slots if you can. If signups are full, or you cannot find any slot that works for you, or you need to request a DUE past October 14 for some other reason, please make a private question on Ed.</li>
+      <li>To check your DUEs score, you can submit any file (as many times as you wish) to the <a href="https://www.gradescope.com/courses/1368451/assignments/8801879">[Ungraded] DUEs Completion Checker</a> assignment in Gradescope.</li>
+    </ul>
+  </li>
+  <li>Congrats on finishing the midterm. We have released the solutions (<a href="https://edstem.org/us/courses/102316/discussion/threads/165">#165</a>).
+    <ul>
+      <li>Regrades will close this <strong>Wednesday October 14th at 11:59pm</strong>. Please make sure to submit all of your regrade requests before then as we will not be accepting any regrades past this date.</li>
+      <li>If your regrade involves changing the rubric itself, you must post in the relevant question Ed thread rather than make a regrade request.</li>
+    </ul>
+  </li>
+  <li>To clear up a bit of confusion over attendance, feel free to read more about it here <a href="https://fa26.cs161.org/policies/#attendance">https://fa26.cs161.org/policies/#attendance</a>, but attendance points captured through PollEV participation during lectures can be used to gain points back on the exams. We count both in person and zoom attendance.
+    <ul>
+      <li>We will also be allowing 2 missed attendances to be dropped (not counted in <code class="language-plaintext highlighter-rouge">participation_percentage</code>).</li>
+    </ul>
+  </li>
+</ul>
+
+  </div>
+</div>
+
+<p><a href="announcements" class="btn btn-outline fs-3">Past announcements</a></p>
+<h2 id="course-calendar">
+  
+  
+    <a href="#course-calendar" class="anchor-heading" aria-labelledby="course-calendar"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Course Calendar
+  
+  
+</h2>
+    
+
+<p><a href="#week-42" class="btn btn-outline fs-3">Skip to current week</a></p>
+
+<div><div>
+  <div class="table-wrapper"><table class="spanned-table"><thead>
+      <tr class="starting-row">
+        <th style="width:5%">Wk.</th>
+        <th style="width:10%">Date</th>
+        <th style="width:32%">Lecture</th>
+        
+        <th style="width:30%">Discussion</th>
+        
+        <th style="width:8%">HW</th>
+        <th style="width:15%">Project</th>
+      </tr>
+    </thead><tbody><tr class="starting-row"><td class=" week-cell" rowspan="2" id="week-34">
+                  1</td><td class="" rowspan="1">
+                  Wed<br />Aug 26
+                </td><td class=" " rowspan="1">1. Introduction and Security Principles<br /><a href="https://docs.google.com/presentation/d/1jZZE33QZgsGGJrv8Ailobzf6XNEFXim2dp__6dhSYgw" aria-label="Slides for Lecture 1 (Introduction and Security Principles)">Slides</a> / <a href="https://www.youtube.com/watch?v=9gzmFcPmpbY" aria-label="Recording for Lecture 1 (Introduction and Security Principles)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/principles/principles.html">Ch. 1</a></td>
+<td class=" " rowspan="2">0. 61C Review<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc00.pdf" aria-label="Worksheet for Discussion 0 (61C Review)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc00-sols.pdf" aria-label="Solutions for Discussion 0 (61C Review)">Solutions</a><br />
+  <p><a href="https://www.youtube.com/watch?v=WVhKJqCqwyE">61C Review Video</a></p>
+</td>
+<td class="" rowspan="10"><a href="https://www.gradescope.com/courses/1368451/assignments/8572815/">HW1</a>
+  <br />
+  (due Wed Sep 16)</td>
+<td class="" rowspan="2"></td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Aug 28
+                </td><td class=" " rowspan="1">2. x86 Assembly and Call Stack<br /><a href="https://docs.google.com/presentation/d/1sUEdMqxM8kGXvi0RciRIGnVVBTjV1Hs8OOtjqTAc_5A" aria-label="Slides for Lecture 2 (x86 Assembly and Call Stack)">Slides</a> / <a href="https://www.youtube.com/watch?v=Nk_nKhXT-vQ" aria-label="Recording for Lecture 2 (x86 Assembly and Call Stack)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/memory-safety/x86.html">Ch. 2</a>
+     / 
+  <a href="https://assets.cs161.org/proj1/cheatsheet.pdf">x86/GDB Cheat Sheet</a></td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-35">
+                  2</td><td class="is-even" rowspan="1">
+                  Mon<br />Aug 31
+                </td><td class="is-even " rowspan="1">3. Memory Safety Vulnerabilities<br /><a href="https://docs.google.com/presentation/d/1PqEErf_NX-odsg31x2ytqU13QLcNSeUMHxYn4M9YIWs" aria-label="Slides for Lecture 3 (Memory Safety Vulnerabilities)">Slides</a> / <a href="https://www.youtube.com/watch?v=M_pKOL8GG_E" aria-label="Recording for Lecture 3 (Memory Safety Vulnerabilities)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/memory-safety/vulnerabilities.html">Ch. 3.1, 3.2</a></td>
+<td class="is-even " rowspan="3">1. Security Principles and x86<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc01.pdf" aria-label="Worksheet for Discussion 1 (Security Principles and x86)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc01-sols.pdf" aria-label="Solutions for Discussion 1 (Security Principles and x86)">Solutions</a> / <a href="https://drive.google.com/drive/folders/1AhtiBiJpm32gEOSwip2iJjoaLtWdFADX?usp=drive_link" aria-label="Slides for Discussion 1 (Security Principles and x86)">Slides</a><br /><br />Exam Prep:&nbsp;<a href="/assets/discussions/cs161-fa26-examprep01.pdf" aria-label="Worksheet for Exam Prep 1 (Security Principles and x86)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-examprep01-sols.pdf" aria-label="Solutions for Exam Prep 1 (Security Principles and x86)">Solutions</a> / <a href="https://drive.google.com/drive/folders/1hUSgEdH90TFyrJDFEb29A4Mb4QiZw5GP?usp=drive_link" aria-label="Slides for Exam Prep 1 (Security Principles and x86)">Slides</a></td>
+<td class="schedule-yellow" rowspan="6"><a href="/proj1">Project 1 Checkpoint</a>
+  <br />
+  (due Fri Sep 11)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Sep 02
+                </td><td class="is-even " rowspan="1">4. Memory Safety Vulnerabilities (continued)<br /><a href="https://docs.google.com/presentation/d/1PqEErf_NX-odsg31x2ytqU13QLcNSeUMHxYn4M9YIWs" aria-label="Slides for Lecture 4 (Memory Safety Vulnerabilities (continued))">Slides</a> / <a href="https://www.youtube.com/watch?v=HBNJNYP7GoA" aria-label="Recording for Lecture 4 (Memory Safety Vulnerabilities (continued))">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/memory-safety/vulnerabilities.html">Ch. 3.4, 3.6</a></td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Sep 04
+                </td><td class="is-even " rowspan="1">5. Mitigating Memory Safety Vulnerabilities<br /><a href="https://docs.google.com/presentation/d/1afedzWjX1AP-NzWWhJdnckZq7nvXVrVR5dLo0fyOKQQ" aria-label="Slides for Lecture 5 (Mitigating Memory Safety Vulnerabilities)">Slides</a> / <a href="https://www.youtube.com/watch?v=xzsESLGJBc4" aria-label="Recording for Lecture 5 (Mitigating Memory Safety Vulnerabilities)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/memory-safety/mitigations.html">Ch. 4</a></td>
+</tr><tr class="starting-row"><td class=" week-cell" rowspan="3" id="week-36">
+                  3</td><td class="" rowspan="1">
+                  Mon<br />Sep 07
+                </td><td class=" " rowspan="1"><p><strong>No Lecture (holiday)</strong></p>
+</td>
+<td class=" " rowspan="3">2. Memory Safety<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc02.pdf" aria-label="Worksheet for Discussion 2 (Memory Safety)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc02-sols.pdf" aria-label="Solutions for Discussion 2 (Memory Safety)">Solutions</a> / <a href="https://drive.google.com/drive/folders/14hDD6iAY6VDx5nw4cH8rfAEZ9W-Yw92_?usp=drive_link" aria-label="Slides for Discussion 2 (Memory Safety)">Slides</a><br /><br />Exam Prep:&nbsp;<a href="/assets/discussions/cs161-fa26-examprep02.pdf" aria-label="Worksheet for Exam Prep 2 (Memory Safety)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-examprep02-sols.pdf" aria-label="Solutions for Exam Prep 2 (Memory Safety)">Solutions</a> / <a href="https://drive.google.com/drive/folders/1qOvl5zrWd971KUq3-RJsT1Sh5gR1fI8a?usp=drive_link" aria-label="Slides for Exam Prep 2 (Memory Safety)">Slides</a></td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Sep 09
+                </td><td class=" " rowspan="1">6. Mitigating Memory Safety Vulnerabilities (continued)<br /><a href="https://docs.google.com/presentation/d/1afedzWjX1AP-NzWWhJdnckZq7nvXVrVR5dLo0fyOKQQ" aria-label="Slides for Lecture 6 (Mitigating Memory Safety Vulnerabilities (continued))">Slides</a> / <a href="https://www.youtube.com/watch?v=hAwJdf9tcTk" aria-label="Recording for Lecture 6 (Mitigating Memory Safety Vulnerabilities (continued))">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/memory-safety/mitigations.html">Ch. 4</a></td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Sep 11
+                </td><td class=" " rowspan="1">7. Authentication, Cryptographic Hashes<br /><a href="https://docs.google.com/presentation/d/1UnhGALUuc4r2McfFGqQT15wlNEqjtiL0bwYsfyS-NaI" aria-label="Slides for Lecture 7 (Authentication, Cryptographic Hashes)">Slides</a> / <a href="https://www.youtube.com/watch?v=PZAXOZySk8I" aria-label="Recording for Lecture 7 (Authentication, Cryptographic Hashes)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/hashes.html">Ch. 7</a></td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-37">
+                  4</td><td class="is-even" rowspan="1">
+                  Mon<br />Sep 14
+                </td><td class="is-even " rowspan="1">8. MACs<br /><a href="https://docs.google.com/presentation/d/1OR3Zr_642PBI1hHKkxMbJs7W8ZL0PVZ8rGdNnjnS3cI" aria-label="Slides for Lecture 8 (MACs)">Slides</a> / <a href="https://www.youtube.com/watch?v=XuB2JzQTjak" aria-label="Recording for Lecture 8 (MACs)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/macs.html">Ch. 8</a></td>
+<td class="is-even " rowspan="3">3. Memory Safety Mitigations and Injection Attacks<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc03.pdf" aria-label="Worksheet for Discussion 3 (Memory Safety Mitigations and Injection Attacks)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc03-sols.pdf" aria-label="Solutions for Discussion 3 (Memory Safety Mitigations and Injection Attacks)">Solutions</a> / <a href="https://drive.google.com/drive/folders/1-EIhpOSlj7z4D7hnqDsUrzGlromwKVI_?usp=drive_link" aria-label="Slides for Discussion 3 (Memory Safety Mitigations and Injection Attacks)">Slides</a><br /><br />Exam Prep:&nbsp;<a href="/assets/discussions/cs161-fa26-examprep03.pdf" aria-label="Worksheet for Exam Prep 3 (Memory Safety Mitigations and Injection Attacks)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-examprep03-sols.pdf" aria-label="Solutions for Exam Prep 3 (Memory Safety Mitigations and Injection Attacks)">Solutions</a></td>
+<td class="schedule-yellow" rowspan="3"><a href="/proj1">Project 1</a>
+  <br />
+  (due Fri Sep 18)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Sep 16
+                </td><td class="is-even " rowspan="1">9. Signatures<br /><a href="https://docs.google.com/presentation/d/19rNkxncD-vaexw_KjSWLvC9STdxWZ-Dtekgi3iwsszw" aria-label="Slides for Lecture 9 (Signatures)">Slides</a> / <a href="https://www.youtube.com/watch?v=NqPES5fFafM" aria-label="Recording for Lecture 9 (Signatures)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/signatures.html">Ch. 12</a></td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Sep 18
+                </td><td class="is-even " rowspan="1">10. Public-Key Infrastructure<br /><a href="https://docs.google.com/presentation/d/1z-RZYr4s1_76XuLlzrrN-QvGs2jQD5hW24vE-n764KE" aria-label="Slides for Lecture 10 (Public-Key Infrastructure)">Slides</a> / <a href="https://www.youtube.com/watch?v=sCpAPMTBR6o" aria-label="Recording for Lecture 10 (Public-Key Infrastructure)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/certificates.html">Ch. 13</a></td>
+<td class="" rowspan="6"><a href="https://www.gradescope.com/courses/1368451/assignments/8650391">HW2</a>
+  <br />
+  (due Wed Sep 30)</td>
+</tr><tr class="starting-row"><td class=" week-cell" rowspan="3" id="week-38">
+                  5</td><td class="" rowspan="1">
+                  Mon<br />Sep 21
+                </td><td class=" " rowspan="1">11. Public-Key Infrastructure (continued)<br /><a href="https://docs.google.com/presentation/d/1z-RZYr4s1_76XuLlzrrN-QvGs2jQD5hW24vE-n764KE" aria-label="Slides for Lecture 11 (Public-Key Infrastructure (continued))">Slides</a> / <a href="https://www.youtube.com/watch?v=OkXSr5FTmZ4" aria-label="Recording for Lecture 11 (Public-Key Infrastructure (continued))">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/certificates.html">Ch. 13</a></td>
+<td class=" " rowspan="3">4. Intro to Auth (Hashes and MACs)<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc04.pdf" aria-label="Worksheet for Discussion 4 (Intro to Auth (Hashes and MACs))">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc04-sols.pdf" aria-label="Solutions for Discussion 4 (Intro to Auth (Hashes and MACs))">Solutions</a> / <a href="https://drive.google.com/drive/folders/1dIG6D6swDnjCbFro1WxT4DKNUnwcnRiM?usp=drive_link" aria-label="Slides for Discussion 4 (Intro to Auth (Hashes and MACs))">Slides</a><br /><br />Exam Prep:&nbsp;<a href="/assets/discussions/cs161-fa26-examprep04.pdf" aria-label="Worksheet for Exam Prep 4 (Intro to Auth (Hashes and MACs))">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-examprep04-sols.pdf" aria-label="Solutions for Exam Prep 4 (Intro to Auth (Hashes and MACs))">Solutions</a></td>
+<td class="schedule-blue" rowspan="3"><a href="/proj2">Project 2 Spec Quiz</a>
+  <br />
+  (due Fri Sep 25)</td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Sep 23
+                </td><td class=" " rowspan="1">12. Symmetric-Key Encryption<br /><a href="https://docs.google.com/presentation/d/1ws-ECLFS8fGKl6cobFm7t0wuwoKFuSyAmRa-NXq4w8s" aria-label="Slides for Lecture 12 (Symmetric-Key Encryption)">Slides</a> / <a href="https://www.youtube.com/watch?v=TPdKPuhAzW4" aria-label="Recording for Lecture 12 (Symmetric-Key Encryption)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/symmetric.html">Ch. 6</a></td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Sep 25
+                </td><td class=" " rowspan="1">13. Symmetric-Key Encryption (continued)<br /><a href="https://docs.google.com/presentation/d/1ws-ECLFS8fGKl6cobFm7t0wuwoKFuSyAmRa-NXq4w8s" aria-label="Slides for Lecture 13 (Symmetric-Key Encryption (continued))">Slides</a> / <a href="https://www.youtube.com/watch?v=m1KBB_93QSQ" aria-label="Recording for Lecture 13 (Symmetric-Key Encryption (continued))">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/symmetric.html">Ch. 6</a></td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-39">
+                  6</td><td class="is-even" rowspan="1">
+                  Mon<br />Sep 28
+                </td><td class="is-even " rowspan="1">14. Authenticated Encryption<br /><a href="https://docs.google.com/presentation/d/1IQ3z5NvTsabjEB8loZorMuRMx7Qg-_EY-CO7mk9PZq0" aria-label="Slides for Lecture 14 (Authenticated Encryption)">Slides</a> / <a href="https://www.youtube.com/watch?v=hxRLHmcYsEA" aria-label="Recording for Lecture 14 (Authenticated Encryption)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/macs.html#87-authenticated-encryption">Ch. 8.7</a></td>
+<td class="is-even " rowspan="3">5. Symmetric Key Encryption and Key Exchange<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc05.pdf" aria-label="Worksheet for Discussion 5 (Symmetric Key Encryption and Key Exchange)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc05-sols.pdf" aria-label="Solutions for Discussion 5 (Symmetric Key Encryption and Key Exchange)">Solutions</a> / <a href="https://drive.google.com/drive/folders/158OVr9fKKsrYnXYLNWv3Gd09vWpnO5AX?usp=drive_link" aria-label="Slides for Discussion 5 (Symmetric Key Encryption and Key Exchange)">Slides</a><br /><br />Exam Prep:&nbsp;<a href="/assets/discussions/cs161-fa26-examprep05.pdf" aria-label="Worksheet for Exam Prep 5 (Symmetric Key Encryption and Key Exchange)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-examprep05-sols.pdf" aria-label="Solutions for Exam Prep 5 (Symmetric Key Encryption and Key Exchange)">Solutions</a></td>
+<td class="schedule-blue" rowspan="3"><a href="/proj2">Project 2 Design Checkpoint</a>
+  <br />
+  (due Fri Oct 02)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Sep 30
+                </td><td class="is-even " rowspan="1">15. Diffie-Hellman Key Exchange, Public-Key Encryption<br /><a href="https://docs.google.com/presentation/d/13HL_L7bovYkLTr2rl-pQ4tLOcX1f_tniN1Y157v1534" aria-label="Slides for Lecture 15 (Diffie-Hellman Key Exchange, Public-Key Encryption)">Slides</a> / <a href="https://www.youtube.com/watch?v=ByK63-M7KJs" aria-label="Recording for Lecture 15 (Diffie-Hellman Key Exchange, Public-Key Encryption)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/crypto/key-exchange.html">Ch. 10</a>
+     / 
+  <a href="https://textbook.cs161.org/crypto/public-key.html">Ch. 11</a></td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Oct 02
+                </td><td class="is-even " rowspan="1">16. How the Internet Works<br /><a href="https://docs.google.com/presentation/d/1Oigv8zez1g6ypicUly_X5W5IbwtjJRkJ1AytDsefqrM" aria-label="Slides for Lecture 16 (How the Internet Works)">Slides</a> / <a href="https://www.youtube.com/watch?v=tH4nfPz7XKc" aria-label="Recording for Lecture 16 (How the Internet Works)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/network/intro.html">Ch. 25</a></td>
+<td class="" rowspan="6">HW3
+  <br />
+  (due Wed Oct 14)</td>
+</tr><tr class="starting-row"><td class=" week-cell" rowspan="4" id="week-40">
+                  7</td><td class="" rowspan="1">
+                  Mon<br />Oct 05
+                </td><td class=" " rowspan="1">17. Low-Level Network Attacks<br /><a href="https://docs.google.com/presentation/d/1Oigv8zez1g6ypicUly_X5W5IbwtjJRkJ1AytDsefqrM" aria-label="Slides for Lecture 17 (Low-Level Network Attacks)">Slides</a> / <a href="https://www.youtube.com/watch?v=JHAhJOIqAj4" aria-label="Recording for Lecture 17 (Low-Level Network Attacks)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/network/arp.html">Ch. 26</a>
+     / 
+  <a href="https://textbook.cs161.org/network/bgp.html">Ch. 29</a>
+     / 
+  <a href="https://textbook.cs161.org/network/transport.html">Ch. 30</a></td>
+<td class=" " rowspan="4">Midterm: No Discussion</td>
+<td class="schedule-blue" rowspan="9"><a href="/proj2">Project 2 Testing Checkpoint</a>
+  <br />
+  (due Fri Oct 23)</td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Oct 07
+                </td><td class=" " rowspan="1">18. TLS<br /><a href="https://docs.google.com/presentation/d/1Ygn3tRSuBCRJGqKh2bAJdyUP-cacI0E_ExmjB9a6Cgc" aria-label="Slides for Lecture 18 (TLS)">Slides</a> / <a href="https://www.youtube.com/watch?v=0Tu3Oun9S1Y" aria-label="Recording for Lecture 18 (TLS)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/network/tls.html">Ch. 31</a></td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Thu<br />Oct 08
+                </td><td class=" " rowspan="1"><p><strong>Midterm (Thu Oct 08, 7–9pm PT)</strong></p>
+</td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Oct 09
+                </td><td class=" " rowspan="1">19. What TLS Doesn't Solve<br /><a href="https://docs.google.com/presentation/d/1Sm567zN7oFOruEszqndeFF82pUYOrxmt6klMyqVytyw" aria-label="Slides for Lecture 19 (What TLS Doesn't Solve)">Slides</a> / <a href="https://www.youtube.com/watch?v=KnBQVH2KfDE" aria-label="Recording for Lecture 19 (What TLS Doesn't Solve)">Recording</a>&nbsp;/&nbsp;<a href="https://textbook.cs161.org/network/dos.html">Ch. 34</a>
+     / 
+  <a href="https://textbook.cs161.org/network/tor.html">Ch. 39</a></td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-41">
+                  8</td><td class="is-even" rowspan="1">
+                  Mon<br />Oct 12
+                </td><td class="is-even " rowspan="1">20. End-to-End Security<br /><a href="https://docs.google.com/presentation/d/1ZBLZb3pZxBmYdLN_Su8H97U-ZVsmWQqb2Owldaw-cjI" aria-label="Slides for Lecture 20 (End-to-End Security)">Slides</a> / <a href="https://www.youtube.com/watch?v=_yOCAX0tTu4" aria-label="Recording for Lecture 20 (End-to-End Security)">Recording</a></td>
+<td class="is-even " rowspan="3">6. Intro to Network + TLS<br /><br />Discussion:&nbsp;<a href="/assets/discussions/cs161-fa26-disc06.pdf" aria-label="Worksheet for Discussion 6 (Intro to Network + TLS)">Worksheet</a> / <a href="/assets/discussions/cs161-fa26-disc06-sols.pdf" aria-label="Solutions for Discussion 6 (Intro to Network + TLS)">Solutions</a> / <a href="https://docs.google.com/presentation/d/1z-Ejcy1_2sqSX-Ivl-JhIVVXkTPF0X19LoS-X5YTkmE/edit?usp=drive_link" aria-label="Slides for Discussion 6 (Intro to Network + TLS)">Slides</a><br /><br />Exam Prep:&nbsp;<a href="/assets/discussions/cs161-fa26-examprep06.pdf" aria-label="Worksheet for Exam Prep 6 (Intro to Network + TLS)">Worksheet</a></td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Oct 14
+                </td><td class="is-even " rowspan="1">21. End-to-End Security (continued)<br /><a href="https://docs.google.com/presentation/d/1ZBLZb3pZxBmYdLN_Su8H97U-ZVsmWQqb2Owldaw-cjI" aria-label="Slides for Lecture 21 (End-to-End Security (continued))">Slides</a> / <a href="https://www.youtube.com/watch?v=oTHRO3QRbm0" aria-label="Recording for Lecture 21 (End-to-End Security (continued))">Recording</a></td>
+<td class="" rowspan="3">HW4
+  <br />
+  (due Wed Oct 21)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Oct 16
+                </td><td class="is-even " rowspan="1">22. Network Defense<br /><a href="https://docs.google.com/presentation/d/1SuoQbK50pRa2alyRnbSV5oKRAQKtNMvhEARwXWL5Hn0" aria-label="Slides for Lecture 22 (Network Defense)">Slides</a> / <a href="https://www.youtube.com/watch?v=FqE9skvXAf0" aria-label="Recording for Lecture 22 (Network Defense)">Recording</a></td>
+</tr><tr class="starting-row"><td class=" week-cell" rowspan="3" id="week-42">
+                  9</td><td class="" rowspan="1">
+                  Mon<br />Oct 19
+                </td><td class=" " rowspan="1">23. Intro to Web Applications<br /><a href="https://docs.google.com/presentation/d/1wRxTKw7GSOvxFZQ7VN9yk7w_66LyUaH6NWdZssUVrkA" aria-label="Slides for Lecture 23 (Intro to Web Applications)">Slides</a></td>
+<td class=" " rowspan="3">7. </td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Oct 21
+                </td><td class=" " rowspan="1">24. SQL Injection<br /><a href="https://textbook.cs161.org/web/sqli.html">Ch. 17</a></td>
+<td class="" rowspan="3">HW5
+  <br />
+  (due Wed Oct 28)</td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Oct 23
+                </td><td class=" " rowspan="1">25. XSS<br /><a href="https://textbook.cs161.org/web/xss.html">Ch. 22</a></td>
+<td class="schedule-blue" rowspan="3"><a href="/proj2">Project 2</a>
+  <br />
+  (due Fri Oct 30)</td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-43">
+                  10</td><td class="is-even" rowspan="1">
+                  Mon<br />Oct 26
+                </td><td class="is-even " rowspan="1">26. Web Authentication, CSRF<br /><a href="https://textbook.cs161.org/web/cookies.html">Ch. 20</a>
+     / 
+  <a href="https://textbook.cs161.org/web/csrf.html">Ch. 21</a></td>
+<td class="is-even " rowspan="3">8. </td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Oct 28
+                </td><td class="is-even " rowspan="1">27. Buffer</td>
+<td class="" rowspan="6">HW6
+  <br />
+  (due Wed Nov 11)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Oct 30
+                </td><td class="is-even " rowspan="1">28. UI Security<br /><a href="https://textbook.cs161.org/web/ui-attacks.html">Ch. 23</a></td>
+<td class="schedule-red" rowspan="6">Project 3
+  <br />
+  (due Fri Nov 13)</td>
+</tr><tr class="starting-row"><td class=" week-cell" rowspan="3" id="week-44">
+                  11</td><td class="" rowspan="1">
+                  Mon<br />Nov 02
+                </td><td class=" " rowspan="1">29. Isolation I: Benefits</td>
+<td class=" " rowspan="3">9. </td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Nov 04
+                </td><td class=" " rowspan="1">30. Isolation II: Techniques, Access Control</td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Nov 06
+                </td><td class=" " rowspan="1">31. Buffer</td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-45">
+                  12</td><td class="is-even" rowspan="1">
+                  Mon<br />Nov 09
+                </td><td class="is-even " rowspan="1">32. AI Security 1</td>
+<td class="is-even " rowspan="3">10. </td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Nov 11
+                </td><td class="is-even " rowspan="1"><p><strong>No Lecture (holiday)</strong></p>
+</td>
+<td class="" rowspan="9">HW7
+  <br />
+  (due Wed Dec 02)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Nov 13
+                </td><td class="is-even " rowspan="1">33. AI Security 2</td>
+<td class="" rowspan="14"></td>
+</tr><tr class="starting-row"><td class=" week-cell" rowspan="3" id="week-46">
+                  13</td><td class="" rowspan="1">
+                  Mon<br />Nov 16
+                </td><td class=" " rowspan="1">34. AI Security 3</td>
+<td class=" " rowspan="3">11. </td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Nov 18
+                </td><td class=" " rowspan="1">35. Buffer</td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Nov 20
+                </td><td class=" " rowspan="1">36. Buffer</td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-47">
+                  14</td><td class="is-even" rowspan="1">
+                  Mon<br />Nov 23
+                </td><td class="is-even " rowspan="1">37. Buffer</td>
+<td class="is-even " rowspan="3">12. </td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Nov 25
+                </td><td class="is-even " rowspan="2"><p>No Lecture (Thanksgiving holiday)</p>
+</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Nov 27
+                </td></tr><tr class="starting-row"><td class=" week-cell" rowspan="3" id="week-48">
+                  15</td><td class="" rowspan="1">
+                  Mon<br />Nov 30
+                </td><td class=" " rowspan="1">38. Buffer</td>
+<td class=" " rowspan="3">13. </td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Wed<br />Dec 02
+                </td><td class=" " rowspan="1">39. Case study: Signal</td>
+<td class="" rowspan="6"></td>
+</tr><tr class=""><td class="" rowspan="1">
+                  Fri<br />Dec 04
+                </td><td class=" " rowspan="1">40. Case Study: iPhone Security</td>
+</tr><tr class="starting-row"><td class="is-even week-cell" rowspan="3" id="week-49">
+                  16</td><td class="is-even" rowspan="1">
+                  Mon<br />Dec 07
+                </td><td class="is-even " rowspan="3"><p>No Lecture (RRR Week)</p>
+</td>
+<td class="is-even " rowspan="3">14. Topical Review Sessions (RRR Week)</td>
+</tr><tr class=""><td class="is-even" rowspan="1">
+                  Wed<br />Dec 09
+                </td></tr><tr class=""><td class="is-even" rowspan="1">
+                  Fri<br />Dec 11
+                </td></tr><tr class="starting-row"><td class=" week-cell" rowspan="1" id="week-50">
+                  17</td><td class="" rowspan="1">
+                  Fri<br />Dec 18
+                </td><td class=" " rowspan="1"><p><strong>Final Exam (Fri Dec 18, 11:30am–2:30pm PT)</strong></p>
+</td>
+<td class=" " rowspan="3"></td>
+</tr></tbody>
+  </table></div>
+</div>
+</div>
+
+          
+
+          
+            
+          
+        </main>
+        
+
+  <hr>
+  <footer>
+    
+
+    
+
+
+
+
+
+
+
+
+
+<script>
+  (function () {
+    var navList = document.querySelector('.aux-nav-list');
+    if (!navList || !navList.firstElementChild) return;
+    var darkToggle = navList.firstElementChild;
+    darkToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleDark();
+    });
+  })();
+</script>
+
+<script src="/assets/js/tocbot.min.js"></script>
+<script>
+  // Tries to mirror the HTML TOC
+  tocbot.init({
+    tocSelector: '.js-toc',
+    contentSelector: '.content',
+    headingSelector: 'h2,h3,h4,h5,h6',
+    ignoreSelector: '.no_toc',
+    hasInnerContainers: true,
+    linkClass: 'nav-list-link',
+    activeLinkClass: 'active',
+    listClass: 'nav-list',
+    listItemClass: 'nav-list-item',
+    activeListItemClass: 'active',
+    collapseDepth: 3,
+    scrollSmooth: false,
+  });
+</script>
+
+
+    
+  </footer>
+
+
+      </div>
+    </div>
+    
+      
+
+<div class="search-overlay"></div>
+
+    
+  </div>
+
+  
+</body>
+</html>
+
