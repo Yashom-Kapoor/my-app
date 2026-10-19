@@ -45,3 +45,93 @@ export function resolveConceptRef(ref, idByKey) {
   if (!p) return null;
   return p.id ?? idByKey.get(p.key) ?? null;
 }
+
+export const LEVELS = ["explain", "why", "apply", "contrast", "trap"];
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** True when a material's cards are missing or stale: cards_hash absent or different from the content marker. */
+export function needsCards(m) {
+  return m.cards_hash == null || m.cards_hash !== cardsMarker(m);
+}
+
+/** Why a material can't be saved directly (or null). Children are saved via their parent; a marker is required. */
+export function checkSavable(m) {
+  if (m.status !== "ready") return `material is ${m.status}, not ready`;
+  if (m.parent_id) return `material is a child (${m.kind}) of ${m.parent_id}; save its cards through the parent`;
+  if (cardsMarker(m) == null) return "material has no marker (neither content_hash nor processed_at), so it can't be marked as carded";
+  return null;
+}
+
+/** Every concept uuid a cards.json refers to (for lookup before validation). */
+export function referencedIds(cards) {
+  const ids = new Set();
+  for (const c of cards) {
+    for (const ref of [c.concept, c.other_concept]) {
+      const p = parseConceptRef(ref);
+      if (p?.id) ids.add(p.id);
+    }
+    if (c.other_concept_id) ids.add(c.other_concept_id);
+  }
+  return [...ids];
+}
+
+/**
+ * Validate a cards.json without touching the database. Returns a list of problem strings.
+ * ctx: { courseId, maxPage (null = unchecked), savedConcepts: [{key, deleted_at}], found: Map<uuid, {course_id, deleted_at}> }
+ */
+export function validateCards(incoming, ctx) {
+  const errors = [];
+  const concepts = incoming.concepts ?? [];
+  const cards = incoming.cards ?? [];
+  const seen = (list, what) => {
+    const keys = new Set();
+    for (const x of list) {
+      if (typeof x.key !== "string" || !x.key) errors.push(`${what} without a key`);
+      else if (keys.has(x.key)) errors.push(`duplicate ${what} key ${x.key}`);
+      else keys.add(x.key);
+    }
+    return keys;
+  };
+  const conceptKeys = seen(concepts, "concept");
+  seen(cards, "card");
+  for (const c of concepts) {
+    if (typeof c.title !== "string" || !c.title.trim()) errors.push(`concept ${c.key} needs a title`);
+    if (!Number.isInteger(c.position)) errors.push(`concept ${c.key} needs an integer position`);
+  }
+
+  const badUuid = referencedIds(cards).filter((u) => !UUID.test(u));
+  if (badUuid.length) errors.push(`not a uuid: ${badUuid.join(", ")}`);
+  const usable = (u) => ctx.found.has(u) && ctx.found.get(u).course_id === ctx.courseId && !ctx.found.get(u).deleted_at;
+  const whyNot = (u) => (!ctx.found.has(u) ? "does not exist" : ctx.found.get(u).course_id !== ctx.courseId ? "is in another course" : "is deleted");
+  const savedLive = new Set(ctx.savedConcepts.filter((c) => !c.deleted_at).map((c) => c.key));
+  const savedDeleted = new Set(ctx.savedConcepts.filter((c) => c.deleted_at).map((c) => c.key));
+
+  for (const c of cards) {
+    const at = `card ${c.key}`;
+    if (!LEVELS.includes(c.level)) errors.push(`${at}: level must be one of ${LEVELS.join(", ")}`);
+    if (typeof c.front !== "string" || !c.front.trim() || typeof c.back !== "string" || !c.back.trim()) errors.push(`${at}: needs front and back text`);
+    if (c.page != null && (!Number.isInteger(c.page) || c.page < 1 || (ctx.maxPage != null && c.page > ctx.maxPage))) {
+      errors.push(`${at}: page ${c.page} is outside 1..${ctx.maxPage ?? "?"}`);
+    }
+    const checkRef = (ref, field) => {
+      const p = parseConceptRef(ref);
+      if (!p) errors.push(`${at}: needs ${field}${field === "concept" ? " (every card, including contrast)" : ""}`);
+      else if (p.id) {
+        if (UUID.test(p.id) && !usable(p.id)) errors.push(`${at}: ${field} ${ref} ${whyNot(p.id)}`);
+      } else if (conceptKeys.has(p.key) || savedLive.has(p.key)) {
+        // fine
+      } else if (savedDeleted.has(p.key)) errors.push(`${at}: ${field} ${ref} points at a deleted concept`);
+      else errors.push(`${at}: unknown ${field} ${ref}`);
+    };
+    checkRef(c.concept, "concept");
+    const hasOther = c.other_concept != null || c.other_concept_id != null;
+    if (c.level === "contrast") {
+      if (!hasOther || (c.other_concept == null && !c.other_concept_id)) errors.push(`${at}: contrast cards need other_concept (key or id:<uuid>)`);
+      else if (c.other_concept != null) checkRef(c.other_concept, "other_concept");
+      if (c.other_concept_id && UUID.test(c.other_concept_id) && !usable(c.other_concept_id)) errors.push(`${at}: other_concept_id ${whyNot(c.other_concept_id)}`);
+    } else if (hasOther) {
+      errors.push(`${at}: other_concept / other_concept_id are only allowed on contrast cards, not on ${c.level} cards`);
+    }
+  }
+  return errors;
+}

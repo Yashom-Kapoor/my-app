@@ -70,3 +70,55 @@ describe("concept refs", () => {
     expect(resolveConceptRef("nope", m)).toBeNull();
   });
 });
+
+import { checkSavable, needsCards, validateCards } from "./merge.mjs";
+
+describe("needsCards", () => {
+  it("is true without a cards_hash or when it differs from the marker", () => {
+    expect(needsCards({ content_hash: "a", cards_hash: null })).toBe(true);
+    expect(needsCards({ content_hash: "a", cards_hash: "b" })).toBe(true);
+    expect(needsCards({ content_hash: "a", cards_hash: "a" })).toBe(false);
+  });
+});
+
+describe("checkSavable", () => {
+  const base = { status: "ready", parent_id: null, kind: "slides", content_hash: "h" };
+  it("accepts a ready, parentless, marked material (including orphan solutions)", () => {
+    expect(checkSavable(base)).toBeNull();
+    expect(checkSavable({ ...base, kind: "solutions" })).toBeNull();
+  });
+  it("rejects children, non-ready and unmarked materials", () => {
+    expect(checkSavable({ ...base, kind: "solutions", parent_id: "p1" })).toMatch(/through the parent/);
+    expect(checkSavable({ ...base, status: "processing" })).toMatch(/not ready/);
+    expect(checkSavable({ ...base, content_hash: null, processed_at: null })).toMatch(/no marker/);
+  });
+});
+
+describe("validateCards", () => {
+  const U1 = "11111111-1111-4111-8111-111111111111";
+  const ctx = (extra = {}) => ({ courseId: "co", maxPage: 10, savedConcepts: [], found: new Map(), ...extra });
+  const base = { concepts: [{ key: "c01", title: "T", position: 1 }, { key: "c02", title: "U", position: 2 }] };
+  const mk = (extra) => ({ ...base, cards: [{ key: "k", concept: "c01", level: "explain", page: 1, front: "f", back: "b", ...extra }] });
+
+  it("accepts a valid file", () => {
+    expect(validateCards(mk({}), ctx())).toEqual([]);
+    expect(validateCards(mk({ level: "contrast", other_concept: "c02" }), ctx())).toEqual([]);
+  });
+  it("rejects other_concept on non-contrast cards", () => {
+    expect(validateCards(mk({ other_concept: "c02" }), ctx())[0]).toMatch(/only allowed on contrast/);
+    expect(validateCards(mk({ level: "why", other_concept_id: U1 }), ctx())[0]).toMatch(/only allowed on contrast/);
+  });
+  it("requires other_concept on contrast cards", () => {
+    expect(validateCards(mk({ level: "contrast" }), ctx())[0]).toMatch(/need other_concept/);
+  });
+  it("rejects other_concept pointing at a soft-deleted saved key", () => {
+    const errs = validateCards(mk({ level: "contrast", other_concept: "gone" }), ctx({ savedConcepts: [{ key: "gone", deleted_at: "x" }] }));
+    expect(errs[0]).toMatch(/deleted concept/);
+  });
+  it("checks id: references and page range", () => {
+    expect(validateCards(mk({ concept: `id:${U1}` }), ctx())[0]).toMatch(/does not exist/);
+    const found = new Map([[U1, { course_id: "co", deleted_at: null }]]);
+    expect(validateCards(mk({ concept: `id:${U1}` }), ctx({ found }))).toEqual([]);
+    expect(validateCards(mk({ page: 11 }), ctx())[0]).toMatch(/outside 1\.\.10/);
+  });
+});
