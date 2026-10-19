@@ -54,3 +54,19 @@ describe("planSave", () => {
     expect(planSave(existing, { concepts: [], cards: [] })).toEqual({ insertConcepts: [], updateConcepts: [], insertCards: [], updateCards: [] });
   });
 });
+
+import { parseConceptRef, resolveConceptRef } from "./merge.mjs";
+describe("concept refs", () => {
+  it("parses keys and id: refs", () => {
+    expect(parseConceptRef("c01")).toEqual({ key: "c01" });
+    expect(parseConceptRef("id:abc")).toEqual({ id: "abc" });
+    expect(parseConceptRef("")).toBeNull();
+    expect(parseConceptRef(undefined)).toBeNull();
+  });
+  it("resolves against inserted/existing ids", () => {
+    const m = new Map([["c01", "u1"]]);
+    expect(resolveConceptRef("c01", m)).toBe("u1");
+    expect(resolveConceptRef("id:u9", m)).toBe("u9");
+    expect(resolveConceptRef("nope", m)).toBeNull();
+  });
+});

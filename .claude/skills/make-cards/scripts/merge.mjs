@@ -32,3 +32,16 @@ export function planSave(existing, incoming) {
 export function cardsMarker(m) {
   return m.content_hash ?? (m.processed_at ? new Date(m.processed_at).toISOString() : null);
 }
+
+/** Parse a concept reference: "id:<uuid>" -> { id }, any other non-empty string -> { key }, else null. */
+export function parseConceptRef(ref) {
+  if (typeof ref !== "string" || !ref) return null;
+  return ref.startsWith("id:") ? { id: ref.slice(3) } : { key: ref };
+}
+
+/** Resolve a reference to a concept id given key->id (live concepts of this material, incl. just inserted). Null if unresolved. */
+export function resolveConceptRef(ref, idByKey) {
+  const p = parseConceptRef(ref);
+  if (!p) return null;
+  return p.id ?? idByKey.get(p.key) ?? null;
+}
