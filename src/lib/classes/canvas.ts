@@ -34,12 +34,15 @@ type CanvasAnnouncement = {
   author?: { display_name?: string };
 };
 
-export async function fetchCanvas(token: string) {
+export async function canvasCourses(token: string): Promise<RemoteCourse[]> {
   const list = await getAll<CanvasCourse>("/courses?enrollment_state=active&include[]=term&per_page=100", token);
-  const courses: RemoteCourse[] = list
+  return list
     .filter((c) => c.name)
     .map((c) => ({ id: String(c.id), name: c.name, code: c.course_code ?? c.name, term: c.term?.name ?? null }));
-  if (!courses.length) return { courses, announcements: [] };
+}
+
+export async function canvasAnnouncements(token: string, courses: RemoteCourse[]): Promise<RemoteAnnouncement[]> {
+  if (!courses.length) return [];
 
   const since = new Date(Date.now() - ANNOUNCEMENT_WINDOW_DAYS * 86_400_000).toISOString();
   // Canvas defaults end_date to start_date + 28 days, so it has to be set explicitly.
@@ -49,7 +52,7 @@ export async function fetchCanvas(token: string) {
     `/announcements?${contexts}&start_date=${since}&end_date=${until}&per_page=100`,
     token,
   );
-  const announcements: RemoteAnnouncement[] = raw
+  return raw
     .filter((a) => a.posted_at)
     .map((a) => ({
       courseId: a.context_code.replace(/^course_/, ""),
@@ -60,5 +63,4 @@ export async function fetchCanvas(token: string) {
       url: a.html_url,
       postedAt: a.posted_at!,
     }));
-  return { courses, announcements };
 }

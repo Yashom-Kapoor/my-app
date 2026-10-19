@@ -2,8 +2,8 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { decrypt } from "./crypto";
-import { fetchCanvas } from "./canvas";
-import { fetchEd } from "./ed";
+import { canvasAnnouncements, canvasCourses } from "./canvas";
+import { edAnnouncements, edCourses } from "./ed";
 import { fetchGradescope } from "./gradescope";
 import { ExpiredError, type Provider, type RemoteAnnouncement, type RemoteAssignment, type RemoteCourse } from "./types";
 
@@ -41,10 +41,17 @@ export function cleanCode(code: string) {
 
 /**
  * Map each remote course to a courses row: reuse the row already linked to it, else attach it to
- * an unlinked row with a matching course code, else create a row. Names and codes are only set on
- * create so renames in settings stick.
+ * an unlinked row with a matching course code, else create a row (only when `create` is set;
+ * otherwise the course is skipped). Names and codes are only set on create so renames in settings
+ * stick.
  */
-async function linkCourses(supabase: Client, userId: string, provider: Provider, remote: RemoteCourse[]) {
+async function linkCourses(
+  supabase: Client,
+  userId: string,
+  provider: Provider,
+  remote: RemoteCourse[],
+  { create = true } = {},
+) {
   const column = ID_COLUMN[provider];
   const { data } = await supabase.from("courses").select().eq("user_id", userId);
   const rows: CourseRow[] = data ?? [];
@@ -60,6 +67,8 @@ async function linkCourses(supabase: Client, userId: string, provider: Provider,
         const { error } = await supabase.from("courses").update(linkTo(column, course.id)).eq("id", row.id);
         if (error) throw new Error(error.message);
         row[column] = course.id;
+      } else if (!create) {
+        continue;
       } else {
         const { data: created, error } = await supabase
           .from("courses")
@@ -122,14 +131,28 @@ async function saveAnnouncements(
   if (error) throw new Error(error.message);
 }
 
-async function syncProvider(supabase: Client, userId: string, provider: Provider, secret: string) {
+/**
+ * With Gradescope connected, its newest term is the list of current classes: bCourses and Ed keep
+ * every past enrollment "active", so their courses only count when they match one of those.
+ */
+async function syncProvider(
+  supabase: Client,
+  userId: string,
+  provider: Provider,
+  secret: string,
+  hasGradescope: boolean,
+) {
   if (provider === "gradescope") {
     const { courses, assignments } = await fetchGradescope(secret);
     await saveAssignments(supabase, userId, await linkCourses(supabase, userId, provider, courses), assignments);
-  } else {
-    const { courses, announcements } = provider === "canvas" ? await fetchCanvas(secret) : await fetchEd(secret);
-    await saveAnnouncements(supabase, userId, provider, await linkCourses(supabase, userId, provider, courses), announcements);
+    return;
   }
+  const remote = provider === "canvas" ? await canvasCourses(secret) : await edCourses(secret);
+  const ids = await linkCourses(supabase, userId, provider, remote, { create: !hasGradescope });
+  const kept = remote.filter((c) => ids.has(c.id));
+  const announcements =
+    provider === "canvas" ? await canvasAnnouncements(secret, kept) : await edAnnouncements(secret, kept);
+  await saveAnnouncements(supabase, userId, provider, ids, announcements);
 }
 
 export type SyncResult = { provider: Provider; ok: boolean; error?: string };
@@ -148,6 +171,8 @@ export async function syncAll(supabase: Client, userId: string, { onlyStale = fa
     (a, b) => order.indexOf(a.provider as Provider) - order.indexOf(b.provider as Provider),
   );
 
+  const hasGradescope = sorted.some((c) => c.provider === "gradescope");
+
   for (const conn of sorted) {
     const provider = conn.provider as Provider;
     if (onlyStale && conn.last_synced_at && Date.now() - Date.parse(conn.last_synced_at) < STALE_AFTER_MS) continue;
@@ -156,7 +181,7 @@ export async function syncAll(supabase: Client, userId: string, { onlyStale = fa
 
     let update: { status: string; last_error: string | null; last_synced_at?: string };
     try {
-      await syncProvider(supabase, userId, provider, decrypt(conn.secret));
+      await syncProvider(supabase, userId, provider, decrypt(conn.secret), hasGradescope);
       update = { status: "ok", last_error: null, last_synced_at: new Date().toISOString() };
       results.push({ provider, ok: true });
     } catch (e) {

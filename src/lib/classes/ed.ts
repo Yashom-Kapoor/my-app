@@ -59,9 +59,9 @@ async function announcements(course: RemoteCourse, token: string, since: number)
   return found;
 }
 
-export async function fetchEd(token: string) {
+export async function edCourses(token: string): Promise<RemoteCourse[]> {
   const { courses: enrolled } = await get<EdUser>("/user", token);
-  const courses: RemoteCourse[] = enrolled
+  return enrolled
     .filter(({ course }) => course.status === "active")
     .map(({ course }) => ({
       id: String(course.id),
@@ -69,7 +69,10 @@ export async function fetchEd(token: string) {
       code: course.code,
       term: [course.session, course.year].filter(Boolean).join(" ") || null,
     }));
+}
+
+export async function edAnnouncements(token: string, courses: RemoteCourse[]): Promise<RemoteAnnouncement[]> {
   const since = Date.now() - ANNOUNCEMENT_WINDOW_DAYS * 86_400_000;
   const perCourse = await Promise.all(courses.map((c) => announcements(c, token, since)));
-  return { courses, announcements: perCourse.flat() };
+  return perCourse.flat();
 }
