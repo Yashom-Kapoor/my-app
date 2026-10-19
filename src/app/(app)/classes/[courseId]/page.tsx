@@ -156,14 +156,17 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function MaterialLink({ courseId, material: m, small }: { courseId: string; material: MaterialRow; small?: boolean }) {
+  const cardCount = m.cards[0]?.count ?? 0;
   return (
     <Link href={`/classes/${courseId}/m/${m.id}`} className="flex items-baseline gap-2 hover:underline">
       <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium no-underline">
         {KIND_LABELS[m.kind as MaterialKind]}
       </span>
       <span className={cn("min-w-0 flex-1 truncate", small ? "text-xs" : "text-sm font-medium")}>{m.title}</span>
-      {m.cards[0]?.count > 0 && (
-        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{m.cards[0].count} cards</span>
+      {cardCount > 0 && (
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {cardCount} {cardCount === 1 ? "card" : "cards"}
+        </span>
       )}
       {m.status !== "ready" && (
         <span
