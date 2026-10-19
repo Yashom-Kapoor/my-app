@@ -67,7 +67,9 @@ function Pages({ material }: { material: Pick<MaterialDetail, "kind" | "status" 
       <p className="rounded-lg border p-4 text-sm text-muted-foreground">
         {material.status === "failed"
           ? "Transcription failed. Open the original, or run /ingest-materials again."
-          : "Not transcribed yet. Run /ingest-materials in Claude Code, or open the original."}
+          : material.status === "skipped"
+            ? "Not transcribed on purpose. Open the original."
+            : "Not transcribed yet. Run /ingest-materials in Claude Code, or open the original."}
       </p>
     );
   }

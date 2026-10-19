@@ -24,7 +24,7 @@ const SPARSE_CHARS = 40; // less text than this: likely a diagram or image slide
 const userId = await ownerId();
 const { data: m, error } = await db
   .from("materials")
-  .select("id, course_id, kind, format, title, source_url, content_hash, course:courses ( code, canvas_id )")
+  .select("id, course_id, kind, format, title, status, source_url, content_hash, course:courses ( code, canvas_id )")
   .eq("id", id)
   .eq("user_id", userId)
   .single();
@@ -138,13 +138,15 @@ try {
   const storagePath = `${userId}/${m.course_id}/${id}.pdf`;
   const { error: upErr } = await db.storage.from("materials").upload(storagePath, bytes, { contentType: "application/pdf", upsert: true });
   if (upErr) throw new Error(`storage upload: ${upErr.message}`);
+  // Re-preparing a saved material (to re-check it) keeps it ready, so the reader keeps showing it.
+  const status = m.status === "ready" ? "ready" : "processing";
   await db
     .from("materials")
-    .update({ status: "processing", error: null, storage_path: storagePath, content_hash: hash, page_count: pageCount })
+    .update({ status, error: null, storage_path: storagePath, content_hash: hash, page_count: pageCount })
     .eq("id", id);
 
   console.log(JSON.stringify({ dir, pageCount, sheets: meta.sheets.length, pages: meta.pages.length, sparse }));
 } catch (e) {
-  await db.from("materials").update({ status: "failed", error: e.message }).eq("id", id);
+  if (m.status !== "ready") await db.from("materials").update({ status: "failed", error: e.message }).eq("id", id);
   fail(`prepare failed: ${e.message}`);
 }

@@ -148,7 +148,12 @@ async function Materials({ courseId }: { courseId: string }) {
   );
 }
 
-const STATUS_LABELS: Record<string, string> = { pending: "Waiting", processing: "Waiting", failed: "Failed" };
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Waiting",
+  processing: "Waiting",
+  failed: "Failed",
+  skipped: "Not transcribed",
+};
 
 function MaterialLink({ courseId, material: m, small }: { courseId: string; material: MaterialRow; small?: boolean }) {
   return (

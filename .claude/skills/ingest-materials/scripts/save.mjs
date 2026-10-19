@@ -1,17 +1,20 @@
-// Save a material's transcription and mark it ready, or record a failure.
+// Save a material's transcription and mark it ready, or record a failure or a deliberate skip.
 // Usage: node .claude/skills/ingest-materials/scripts/save.mjs <material-id> <pages.json>
 //        node .claude/skills/ingest-materials/scripts/save.mjs <material-id> --fail "reason"
+//        node .claude/skills/ingest-materials/scripts/save.mjs <material-id> --skip "reason"
 // pages.json: [{ "page": 1, "markdown": "...", "unreadable": false }, ...] covering every page.
-import { readFileSync, rmSync } from "node:fs";
+// After saving, the pages are kept in .ingest/<id>/saved.json (for re-checks) and the images are removed.
+import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { WORK_DIR, db, fail, ownerId } from "./lib.mjs";
 
 const [id, arg, reason] = process.argv.slice(2);
-if (!id || !arg) fail("usage: save.mjs <material-id> <pages.json> | --fail <reason>");
+if (!id || !arg) fail("usage: save.mjs <material-id> <pages.json> | --fail <reason> | --skip <reason>");
 const userId = await ownerId();
 
-if (arg === "--fail") {
-  await db.from("materials").update({ status: "failed", error: reason ?? "transcription failed" }).eq("id", id).eq("user_id", userId);
-  console.log("marked failed");
+if (arg === "--fail" || arg === "--skip") {
+  const status = arg === "--fail" ? "failed" : "skipped";
+  await db.from("materials").update({ status, error: reason ?? `transcription ${status}` }).eq("id", id).eq("user_id", userId);
+  console.log(`marked ${status}`);
   process.exit(0);
 }
 
@@ -38,5 +41,7 @@ await db
   .from("materials")
   .update({ status: "ready", error: null, processed_at: new Date().toISOString() })
   .eq("id", id);
-rmSync(`${WORK_DIR}/${id}`, { recursive: true, force: true });
+const dir = `${WORK_DIR}/${id}`;
+writeFileSync(`${dir}/saved.json`, JSON.stringify(pages, null, 1));
+for (const f of readdirSync(dir)) if (f.endsWith(".png")) rmSync(`${dir}/${f}`);
 console.log(`saved ${rows.length} pages (${rows.filter((r) => r.needs_review).length} flagged for review)`);
