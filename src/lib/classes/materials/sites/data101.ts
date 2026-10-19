@@ -1,15 +1,19 @@
 import "server-only";
+import type * as cheerio from "cheerio";
 import { clean, loadPage, parseDay, slidesUrl } from "../fetch";
+import { datahubToRaw } from "../notebook";
 import type { FoundMaterial } from "../types";
 
 // data101.org/fa26 (Just the Docs). The schedule has a table per week; lectures link to their own
 // page, which lists the Google Slides deck and the related course notes.
 
-export async function discoverData101(siteUrl: string): Promise<FoundMaterial[]> {
-  const $ = await loadPage(siteUrl);
+type Lecture = { url: string; title: string; week: string; day: string | null };
+
+/** Pure parse of the schedule page: worksheets, notebooks, and the lecture pages still to open. */
+function parseSchedule($: cheerio.CheerioAPI, siteUrl: string) {
   const found = new Map<string, FoundMaterial>();
   const add = (m: FoundMaterial) => !found.has(m.sourceUrl) && found.set(m.sourceUrl, m);
-  const lectures: { url: string; title: string; week: string; day: string | null }[] = [];
+  const lectures: Lecture[] = [];
 
   $("h2.week-label").each((_, h) => {
     const heading = $(h);
@@ -29,6 +33,23 @@ export async function discoverData101(siteUrl: string): Promise<FoundMaterial[]>
         }));
         const main = links[0];
         if (!main) return;
+
+        // Notebooks open through DataHub links; store the raw GitHub URL they point at.
+        const notebooks = links.flatMap((l) => {
+          const raw = datahubToRaw(l.href);
+          return raw ? [{ ...l, raw }] : [];
+        });
+        const worksheetPdf = links.find((l) => /\.pdf($|\?)/i.test(l.href) && !/_sol/i.test(l.href));
+        for (const nb of notebooks) {
+          const project = nb.text.match(/^Project\s+(\d+)\b/i);
+          if (project) {
+            const due = nb.text.match(/\(due\s+(\d{1,2})\/(\d{1,2})\)/i);
+            const sortDate = due ? `${year}-${due[1].padStart(2, "0")}-${due[2].padStart(2, "0")}` : day;
+            add({ kind: "project", format: "ipynb", title: `Project ${project[1]}`, weekLabel: week, sortDate, sourceUrl: nb.raw });
+          } else if (kind.includes("label-discussion")) {
+            add({ kind: "discussion", format: "ipynb", title: `${label} notebook`, weekLabel: week, sortDate: day, sourceUrl: nb.raw, parentUrl: worksheetPdf?.href });
+          }
+        }
 
         if (kind.includes("label-lecture")) {
           // Lecture pages exist ahead of time; only follow released ones.
@@ -55,6 +76,16 @@ export async function discoverData101(siteUrl: string): Promise<FoundMaterial[]>
     });
   });
 
+  return { found, lectures };
+}
+
+export function parseData101($: cheerio.CheerioAPI, siteUrl: string): FoundMaterial[] {
+  return [...parseSchedule($, siteUrl).found.values()];
+}
+
+export async function discoverData101(siteUrl: string): Promise<FoundMaterial[]> {
+  const { found, lectures } = parseSchedule(await loadPage(siteUrl), siteUrl);
+  const add = (m: FoundMaterial) => !found.has(m.sourceUrl) && found.set(m.sourceUrl, m);
   const pages = await Promise.all(lectures.map((l) => loadPage(l.url).catch(() => null)));
   lectures.forEach((lecture, i) => {
     const page = pages[i];

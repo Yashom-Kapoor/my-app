@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import { decrypt } from "../crypto";
 import { discoverCanvasFiles } from "./canvas-files";
+import { datahubToRaw, notebookToMarkdown } from "./notebook";
 import { convertReading } from "./readings";
 import { discoverCs161 } from "./sites/cs161";
 import { discoverData101 } from "./sites/data101";
@@ -34,9 +35,10 @@ async function save(supabase: Client, userId: string, courseId: string, found: F
     source_url: m.sourceUrl,
   });
   // Upserts never touch status or pages. Files refresh their metadata from the source each run;
-  // HTML readings are insert-only because conversion replaces their title with the page heading.
-  const files = found.filter((m) => m.format !== "html").map(toRow);
-  const readings = found.filter((m) => m.format === "html").map(toRow);
+  // HTML/notebook readings are insert-only because conversion replaces their title with the page heading.
+  const isReading = (m: FoundMaterial) => m.format === "html" || m.format === "ipynb";
+  const files = found.filter((m) => !isReading(m)).map(toRow);
+  const readings = found.filter(isReading).map(toRow);
   for (const [rows, ignoreDuplicates] of [[files, false], [readings, true]] as const) {
     if (!rows.length) continue;
     const { error } = await supabase.from("materials").upsert(rows, { onConflict: "user_id,source_url", ignoreDuplicates });
@@ -60,19 +62,27 @@ async function save(supabase: Client, userId: string, courseId: string, found: F
   }
 }
 
+/** Notebooks are stored by their raw GitHub URL (or a DataHub link, which is mapped to one). */
+async function convertNotebook(url: string): Promise<{ title: string | null; markdown: string }> {
+  const raw = datahubToRaw(url) ?? url;
+  const res = await fetch(raw, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Notebook fetch returned ${res.status}`);
+  return { title: null, markdown: notebookToMarkdown(await res.json()) };
+}
+
 /** Convert pending HTML readings to Markdown right away; they don't need Claude. */
 async function convertReadings(supabase: Client, userId: string) {
   const { data: pending } = await supabase
     .from("materials")
-    .select("id, source_url")
+    .select("id, source_url, format")
     .eq("user_id", userId)
-    .eq("format", "html")
+    .in("format", ["html", "ipynb"])
     .in("status", ["pending", "failed"])
     .limit(READINGS_PER_RUN);
   await Promise.all(
     (pending ?? []).map(async (m) => {
       try {
-        const { title, markdown } = await convertReading(m.source_url);
+        const { title, markdown } = m.format === "ipynb" ? await convertNotebook(m.source_url) : await convertReading(m.source_url);
         const { error } = await supabase
           .from("material_pages")
           .upsert({ material_id: m.id, page: 1, user_id: userId, markdown }, { onConflict: "material_id,page" });
