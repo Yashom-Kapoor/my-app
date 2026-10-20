@@ -279,6 +279,7 @@ export async function getDeckStats(courseId: string): Promise<DeckStats> {
         .from("card_reviews")
         .select("id, rating, card:cards!inner ( course_id )")
         .eq("card.course_id", courseId)
+        .is("card.deleted_at", null)
         .gte("reviewed_at", since)
         .order("id")
         .range(from, to),

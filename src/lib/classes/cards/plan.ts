@@ -1,4 +1,5 @@
 // Pure daily-session planner. Never reads the clock: callers pass `now` and `today`.
+import { dateOf } from "@/lib/dates";
 
 export type Level = "explain" | "why" | "apply" | "contrast" | "trap";
 
@@ -160,6 +161,27 @@ export function cardStatus(
   if (Date.parse(card.due) <= now.getTime()) return { status: "due", due: card.due };
   if (card.scheduled_days >= MASTERED_DAYS) return { status: "mastered", due: card.due };
   return { status: "review", due: card.due };
+}
+
+/** Short chip text for a card's status; "Due in Nd" counts calendar days in the app's timezone. */
+export function statusLabel(status: CardStatus, due: string | null, now: Date): string {
+  switch (status) {
+    case "new":
+      return "New";
+    case "locked":
+      return "Locked";
+    case "learning":
+      return "Learning";
+    case "due":
+      return "Due today";
+    case "mastered":
+      return "Mastered";
+    case "review": {
+      if (due === null) return "Review";
+      const days = Math.round(dayNumber(dateOf(due)) - dayNumber(dateOf(now)));
+      return days <= 0 ? "Due today" : `Due in ${days}d`;
+    }
+  }
 }
 
 export function planDay(input: {

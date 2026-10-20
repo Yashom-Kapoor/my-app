@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardStatus, explainBudget, pace, summarizeQueue, planDay, secondsPerCard, unlockedConcepts, type Level, type PlanCard } from "./plan";
+import { cardStatus, statusLabel, explainBudget, pace, summarizeQueue, planDay, secondsPerCard, unlockedConcepts, type Level, type PlanCard } from "./plan";
 
 const NOW = new Date("2026-10-20T12:00:00Z");
 const PER_CARD: Record<Level, number> = { explain: 20, why: 40, apply: 60, contrast: 45, trap: 45 };
@@ -265,5 +265,21 @@ describe("cardStatus", () => {
   it("review otherwise", () => {
     const c = { ...base, reps: 2, state: 2, due: "2026-10-25T00:00:00Z", scheduled_days: 20 };
     expect(cardStatus(c, none, NOW).status).toBe("review");
+  });
+});
+
+describe("statusLabel", () => {
+  it("counts calendar days for review cards", () => {
+    expect(statusLabel("review", "2026-10-24T18:00:00Z", NOW)).toBe("Due in 4d");
+  });
+  it("says Due today for due cards and for review cards due later today", () => {
+    expect(statusLabel("due", "2026-10-20T08:00:00Z", NOW)).toBe("Due today");
+    expect(statusLabel("review", "2026-10-20T20:00:00Z", NOW)).toBe("Due today");
+  });
+  it("labels the other states", () => {
+    expect(statusLabel("new", null, NOW)).toBe("New");
+    expect(statusLabel("locked", null, NOW)).toBe("Locked");
+    expect(statusLabel("learning", "2026-10-20T12:05:00Z", NOW)).toBe("Learning");
+    expect(statusLabel("mastered", "2027-01-01T00:00:00Z", NOW)).toBe("Mastered");
   });
 });

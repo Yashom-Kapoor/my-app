@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { z } from "zod";
 import { ChevronLeftIcon, ExternalLinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { statusLabel } from "@/lib/classes/cards/plan";
 import { currentTime } from "@/lib/classes/format";
 import { KIND_LABELS, type MaterialKind } from "@/lib/classes/materials/types";
 import { formatDay, weekStart } from "@/lib/dates";
@@ -13,6 +14,9 @@ import { getAnnouncements, getAssignments, getCourse, getMaterials, type Materia
 import { ReviewCard } from "../_components/review-card";
 import { DueList } from "../_components/due-list";
 import { Inbox } from "../_components/inbox";
+import { DeckList, type DeckGroup } from "../_components/deck-list";
+import { DeckStatsHeader } from "../_components/deck-stats";
+import { getDeckCards, getDeckStats } from "../review/data";
 import { toDueItems, toInboxItems } from "../view";
 
 export const metadata: Metadata = { title: "Class" };
@@ -38,6 +42,7 @@ async function Course({ params, searchParams }: Pick<Props, "params" | "searchPa
   const course = await getCourse(courseId);
   if (!course) notFound();
   const materialsTab = tab === "materials";
+  const cardsTab = tab === "cards";
 
   return (
     <>
@@ -58,8 +63,9 @@ async function Course({ params, searchParams }: Pick<Props, "params" | "searchPa
 
       <nav className="flex gap-1 border-b" aria-label="Class sections">
         {[
-          ["Overview", `/classes/${course.id}`, !materialsTab],
+          ["Overview", `/classes/${course.id}`, !materialsTab && !cardsTab],
           ["Materials", `/classes/${course.id}?tab=materials`, materialsTab],
+          ["Cards", `/classes/${course.id}?tab=cards`, cardsTab],
         ].map(([label, href, active]) => (
           <Link
             key={label as string}
@@ -75,7 +81,11 @@ async function Course({ params, searchParams }: Pick<Props, "params" | "searchPa
         ))}
       </nav>
 
-      {materialsTab ? <Materials courseId={course.id} /> : <Overview courseId={course.id} courseCode={course.code} />}
+      {cardsTab ? (
+        <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-muted" />}>
+          <Cards courseId={course.id} />
+        </Suspense>
+      ) : materialsTab ? <Materials courseId={course.id} /> : <Overview courseId={course.id} courseCode={course.code} />}
     </>
   );
 }
@@ -105,6 +115,43 @@ async function Overview({ courseId, courseCode }: { courseId: string; courseCode
         </CardContent>
       </Card>
     </>
+  );
+}
+
+async function Cards({ courseId }: { courseId: string }) {
+  const [stats, cards] = await Promise.all([getDeckStats(courseId), getDeckCards(courseId)]);
+  const now = new Date();
+  // getDeckCards is already ordered by material, then concept.
+  const groups: DeckGroup[] = [];
+  for (const c of cards) {
+    let g = groups.at(-1);
+    if (!g || g.materialId !== c.material_id) {
+      g = { materialId: c.material_id, title: c.material_title, concepts: [] };
+      groups.push(g);
+    }
+    let k = g.concepts.at(-1);
+    if (!k || k.id !== c.concept_id) {
+      k = { id: c.concept_id, title: c.concept_title, cards: [] };
+      g.concepts.push(k);
+    }
+    k.cards.push({
+      id: c.id,
+      level: c.level,
+      front: c.front,
+      back: c.back,
+      page: c.page,
+      status: c.status,
+      label: statusLabel(c.status, c.due, now),
+    });
+  }
+  if (!cards.length) {
+    return <p className="py-6 text-center text-sm text-muted-foreground">No cards for this class yet</p>;
+  }
+  return (
+    <div className="space-y-4">
+      <DeckStatsHeader stats={stats} />
+      <DeckList courseId={courseId} groups={groups} />
+    </div>
   );
 }
 
