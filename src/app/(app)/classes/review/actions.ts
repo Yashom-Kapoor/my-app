@@ -74,6 +74,19 @@ export async function deleteCard(id: string) {
   if (error) throw new Error(error.message);
 }
 
+/** Back of one live card, fetched on demand so the deck list does not ship every answer. */
+export async function getCardBack(id: string): Promise<string> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("cards")
+    .select("back")
+    .eq("id", z.string().uuid().parse(id))
+    .is("deleted_at", null)
+    .maybeSingle();
+  if (error || !data) throw new Error(error?.message ?? "Card not found");
+  return data.back;
+}
+
 const settingsSchema = z.object({
   target_date: z.union([z.literal(""), z.string().date()]).optional(),
   budget_minutes: z.coerce.number().int().min(5).max(300),

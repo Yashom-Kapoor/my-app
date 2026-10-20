@@ -1,20 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ChevronDownIcon, ChevronRightIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { CardStatus } from "@/lib/classes/cards/plan";
 import { cn } from "@/lib/utils";
-import { deleteCard } from "../review/actions";
+import { deleteCard, getCardBack } from "../review/actions";
 import { Markdown } from "./markdown";
 
 export type DeckRow = {
   id: string;
   level: string;
   front: string;
-  back: string;
   page: number | null;
   status: CardStatus;
   label: string;
@@ -102,12 +102,30 @@ function Group({ group, courseId, onDeleted }: { group: DeckGroup; courseId: str
 function Row({ row, href, onDeleted }: { row: DeckRow; href: string; onDeleted: (id: string) => void }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [back, setBack] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const toggle = async () => {
+    const opening = !open;
+    setOpen(opening);
+    if (!opening || back !== null || loading) return;
+    setLoading(true);
+    try {
+      setBack(await getCardBack(row.id));
+    } catch {
+      toast.error("Could not load the answer", { action: { label: "Retry", onClick: () => void toggle() } });
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
+  };
   const remove = () => {
     if (!window.confirm("Delete this card? It will no longer be reviewed.")) return;
     startTransition(async () => {
       try {
         await deleteCard(row.id);
         onDeleted(row.id);
+        router.refresh();
         toast.success("Card deleted");
       } catch {
         toast.error("Could not delete the card");
@@ -119,7 +137,7 @@ function Row({ row, href, onDeleted }: { row: DeckRow; href: string; onDeleted: 
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         className="flex w-full items-center gap-2 px-2.5 py-2 text-left"
       >
         <span className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] capitalize">{row.level}</span>
@@ -130,7 +148,7 @@ function Row({ row, href, onDeleted }: { row: DeckRow; href: string; onDeleted: 
         <div className="space-y-3 border-t bg-muted/30 px-3 py-3 text-sm">
           <Markdown>{row.front}</Markdown>
           <hr />
-          <Markdown>{row.back}</Markdown>
+          {back === null ? <p className="text-xs text-muted-foreground">Loading answer…</p> : <Markdown>{back}</Markdown>}
           <div className="flex items-center justify-between">
             <Link
               href={row.page ? `${href}#p${row.page}` : href}

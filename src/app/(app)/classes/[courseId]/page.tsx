@@ -120,7 +120,7 @@ async function Overview({ courseId, courseCode }: { courseId: string; courseCode
 
 async function Cards({ courseId }: { courseId: string }) {
   const [stats, cards] = await Promise.all([getDeckStats(courseId), getDeckCards(courseId)]);
-  const now = new Date();
+  const now = new Date(currentTime());
   // getDeckCards is already ordered by material, then concept.
   const groups: DeckGroup[] = [];
   for (const c of cards) {
@@ -138,7 +138,6 @@ async function Cards({ courseId }: { courseId: string }) {
       id: c.id,
       level: c.level,
       front: c.front,
-      back: c.back,
       page: c.page,
       status: c.status,
       label: statusLabel(c.status, c.due, now),
