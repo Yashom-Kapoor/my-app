@@ -6,6 +6,7 @@ import { isGraduated, type CardState } from "@/lib/classes/cards/fsrs";
 import {
   alternateCourses,
   cardStatus,
+  explainBudget,
   pace,
   planDay,
   secondsPerCard,
@@ -128,6 +129,8 @@ export async function getStudyOverview(courseId?: string): Promise<{
   breakdown: Breakdown;
   spentMinutes: number;
   budgetMinutes: number;
+  /** New explain cards planned per day to meet the target date; null with no target. */
+  explainPerDay: number | null;
 }> {
   const { cards, unlockedConceptIds, now, day, target, budgetMinutes, introducedToday, spentSecondsToday, perCard } =
     await loadPlanningState();
@@ -153,6 +156,9 @@ export async function getStudyOverview(courseId?: string): Promise<{
   const scoped = courseId ? cards.filter((c) => c.course_id === courseId) : cards;
   const explain = scoped.filter((c) => c.level === "explain");
   const capacity = Math.max(1, Math.floor((budgetMinutes * 60) / Math.max(1, perCard.explain)));
+  const perDay = target
+    ? explainBudget(explain.filter((c) => !c.introduced).length + introducedToday.explain, day, target)
+    : null;
   return {
     dueCount,
     estMinutes,
@@ -163,6 +169,7 @@ export async function getStudyOverview(courseId?: string): Promise<{
     breakdown,
     spentMinutes: Math.round(spentSecondsToday / 60),
     budgetMinutes,
+    explainPerDay: perDay !== null && Number.isFinite(perDay) ? perDay : null,
   };
 }
 

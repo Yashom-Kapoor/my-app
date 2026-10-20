@@ -20,7 +20,19 @@ const GRADES: { grade: Grade; label: string; className: string }[] = [
   { grade: 4, label: "Easy", className: "border-sky-500/40 text-sky-600 dark:text-sky-400" },
 ];
 
-export function Session({ initialCards, restIds }: { initialCards: ReviewCard[]; restIds: string[] }) {
+export function Session({
+  initialCards,
+  restIds,
+  courseId,
+  budgetMinutes,
+}: {
+  initialCards: ReviewCard[];
+  restIds: string[];
+  courseId?: string;
+  budgetMinutes: number;
+}) {
+  const backHref = courseId ? `/classes/${courseId}` : "/classes";
+  const backLabel = courseId ? "Back to class" : "Back to Classes";
   const [queue, setQueue] = useState(initialCards);
   const [idx, setIdx] = useState(0);
   const [rest, setRest] = useState(restIds);
@@ -102,7 +114,7 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
           return;
         }
         // Nothing is held (rest is empty and the queue is finished), so no exclusions are needed.
-        const more = await loadMoreCards([]);
+        const more = await loadMoreCards([], courseId);
         if (!more.cards.length) {
           setExtraEmpty(true);
           return;
@@ -131,6 +143,11 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
             {reviewed} {reviewed === 1 ? "card" : "cards"} reviewed
           </p>
         )}
+        {!extraEmpty && rest.length === 0 && (
+          <p className="text-sm text-muted-foreground">
+            Today&apos;s plan is done ({budgetMinutes} min budget). Learn 20 more goes beyond it.
+          </p>
+        )}
         {extraEmpty ? (
           <p className="text-sm text-muted-foreground">All caught up for today. Nothing new is left to learn.</p>
         ) : (
@@ -139,8 +156,8 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
           </Button>
         )}
         <div>
-          <Link href="/classes" className={buttonVariants({ variant: "ghost" })}>
-            Back to Classes
+          <Link href={backHref} className={buttonVariants({ variant: "ghost" })}>
+            {backLabel}
           </Link>
         </div>
       </div>
@@ -153,7 +170,7 @@ export function Session({ initialCards, restIds }: { initialCards: ReviewCard[];
   return (
     <div className="flex min-h-[calc(100dvh-8rem)] flex-col gap-4">
       <div className="flex items-center gap-3">
-        <Link href="/classes" aria-label="Back to Classes" className={buttonVariants({ variant: "ghost", size: "icon" })}>
+        <Link href={backHref} aria-label={backLabel} className={buttonVariants({ variant: "ghost", size: "icon" })}>
           <ChevronLeftIcon />
         </Link>
         <div className="flex-1 space-y-1">

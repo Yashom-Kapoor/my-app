@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { z } from "zod";
 import { ChevronLeftIcon, ExternalLinkIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { currentTime } from "@/lib/classes/format";
@@ -9,6 +10,7 @@ import { KIND_LABELS, type MaterialKind } from "@/lib/classes/materials/types";
 import { formatDay, weekStart } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { getAnnouncements, getAssignments, getCourse, getMaterials, type MaterialRow } from "../data";
+import { ReviewCard } from "../_components/review-card";
 import { DueList } from "../_components/due-list";
 import { Inbox } from "../_components/inbox";
 import { toDueItems, toInboxItems } from "../view";
@@ -32,6 +34,7 @@ export default function CoursePage({ params, searchParams }: Props) {
 
 async function Course({ params, searchParams }: Pick<Props, "params" | "searchParams">) {
   const [{ courseId }, { tab }] = await Promise.all([params, searchParams]);
+  if (!z.string().uuid().safeParse(courseId).success) notFound();
   const course = await getCourse(courseId);
   if (!course) notFound();
   const materialsTab = tab === "materials";
@@ -72,16 +75,19 @@ async function Course({ params, searchParams }: Pick<Props, "params" | "searchPa
         ))}
       </nav>
 
-      {materialsTab ? <Materials courseId={course.id} /> : <Overview courseId={course.id} />}
+      {materialsTab ? <Materials courseId={course.id} /> : <Overview courseId={course.id} courseCode={course.code} />}
     </>
   );
 }
 
-async function Overview({ courseId }: { courseId: string }) {
+async function Overview({ courseId, courseCode }: { courseId: string; courseCode: string }) {
   const [assignments, announcements] = await Promise.all([getAssignments(courseId), getAnnouncements(courseId)]);
   const now = currentTime();
   return (
     <>
+      <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>
+        <ReviewCard courseId={courseId} courseCode={courseCode} />
+      </Suspense>
       <Card>
         <CardHeader>
           <CardTitle>Due</CardTitle>

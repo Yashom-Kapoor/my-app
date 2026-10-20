@@ -25,6 +25,9 @@ export function StudyForm({ targetDate, budgetMinutes }: { targetDate: string | 
         <div className="space-y-1.5">
           <Label htmlFor="target_date">Learn everything by</Label>
           <Input id="target_date" name="target_date" type="date" defaultValue={targetDate ?? ""} />
+          <p className="text-xs text-muted-foreground">
+            Hub introduces just enough new cards each day to finish the first pass by this date.
+          </p>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="budget_minutes">Minutes per day</Label>
@@ -39,6 +42,9 @@ export function StudyForm({ targetDate, budgetMinutes }: { targetDate: string | 
             required
             defaultValue={budgetMinutes}
           />
+          <p className="text-xs text-muted-foreground">
+            How much new material Hub plans each day. Reviews that are due always come first and aren&apos;t cut.
+          </p>
         </div>
       </div>
       <Button type="submit" disabled={pending}>
