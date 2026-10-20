@@ -283,3 +283,31 @@ describe("statusLabel", () => {
     expect(statusLabel("mastered", "2027-01-01T00:00:00Z", NOW)).toBe("Mastered");
   });
 });
+
+describe("class-scoped summaries of the global plan", () => {
+  it("class breakdowns sum to the global one and class queues are subsequences", () => {
+    const cards = [
+      ...Array.from({ length: 6 }, (_, i) => dueCard({ course_id: i % 2 ? "A" : "B" })),
+      ...Array.from({ length: 8 }, (_, i) => card({ course_id: i % 3 ? "A" : "B" })),
+      card({ course_id: "A", level: "why", concept_id: "k1" }),
+      card({ course_id: "B", level: "apply", concept_id: "k2" }),
+    ];
+    const unlockedConceptIds = new Set(["k1", "k2"]);
+    const global = planDay(input(cards, { unlockedConceptIds }));
+    const sums = { reviews: 0, newExplain: 0, newDeeper: 0 };
+    for (const course of ["A", "B"]) {
+      const ids = new Set(cards.filter((c) => c.course_id === course).map((c) => c.id));
+      const queue = global.queue.filter((id) => ids.has(id));
+      const s = summarizeQueue(queue, cards, PER_CARD);
+      sums.reviews += s.breakdown.reviews;
+      sums.newExplain += s.breakdown.newExplain;
+      sums.newDeeper += s.breakdown.newDeeper;
+      let at = -1;
+      for (const id of queue) {
+        at = global.queue.indexOf(id, at + 1);
+        expect(at).toBeGreaterThan(-1);
+      }
+    }
+    expect(sums).toEqual(global.breakdown);
+  });
+});

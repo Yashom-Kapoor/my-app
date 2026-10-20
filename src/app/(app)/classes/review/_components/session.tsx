@@ -143,13 +143,13 @@ export function Session({
             {reviewed} {reviewed === 1 ? "card" : "cards"} reviewed
           </p>
         )}
-        {!extraEmpty && rest.length === 0 && (
+        {!empty && !extraEmpty && rest.length === 0 && (
           <p className="text-sm text-muted-foreground">
             Today&apos;s plan is done ({budgetMinutes} min budget). Learn 20 more goes beyond it.
           </p>
         )}
         {extraEmpty ? (
-          <p className="text-sm text-muted-foreground">All caught up for today. Nothing new is left to learn.</p>
+          <p className="text-sm text-muted-foreground">Nothing new is left to learn.</p>
         ) : (
           <Button size="lg" className="h-11 px-5" disabled={pending} onClick={keepGoing}>
             {rest.length ? "Keep going" : "Learn 20 more"}

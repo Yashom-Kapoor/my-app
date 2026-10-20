@@ -60,7 +60,7 @@ export async function ReviewCard({ courseId, courseCode }: { courseId?: string; 
             <div className="h-full bg-primary" style={{ width: `${barPercent}%` }} />
           </div>
           <p className="text-xs text-muted-foreground tabular-nums">
-            {spentMinutes} of {budgetMinutes} min today
+            {spentMinutes} of {budgetMinutes} min today{courseId ? " (all classes)" : ""}
           </p>
         </div>
         {pace && (
@@ -82,7 +82,7 @@ export async function ReviewCard({ courseId, courseCode }: { courseId?: string; 
               {courseId
                 ? `Backlog ${pace.percent}%`
                 : `Backlog ${pace.percent}% · ${pace.behindBy > 0 ? `behind by ${pace.behindBy}` : "on track"}${
-                    explainPerDay !== null ? ` (~${explainPerDay} new/day)` : ""
+                    explainPerDay !== null && explainPerDay > 0 ? ` (~${explainPerDay} new/day)` : ""
                   }`}
             </p>
           </div>

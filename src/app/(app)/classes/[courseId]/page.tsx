@@ -144,7 +144,11 @@ async function Cards({ courseId }: { courseId: string }) {
     });
   }
   if (!cards.length) {
-    return <p className="py-6 text-center text-sm text-muted-foreground">No cards for this class yet</p>;
+    return (
+      <p className="py-6 text-center text-sm text-muted-foreground">
+        No cards for this class yet. Run <code className="rounded bg-muted px-1 py-0.5 text-xs">/make-cards</code> in Claude Code.
+      </p>
+    );
   }
   return (
     <div className="space-y-4">

@@ -43,7 +43,7 @@ export function DeckStatsHeader({ stats }: { stats: DeckStats }) {
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
           <div className="text-xl font-semibold tabular-nums">{stats.dueToday}</div>
-          <div className="text-xs text-muted-foreground">to review today (incl. learning)</div>
+          <div className="text-xs text-muted-foreground">due now (incl. learning)</div>
         </div>
         <div>
           <div className="text-xl font-semibold tabular-nums">

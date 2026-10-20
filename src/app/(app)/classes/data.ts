@@ -116,10 +116,18 @@ export async function getMaterials(courseId: string) {
 }
 export type MaterialRow = Awaited<ReturnType<typeof getMaterials>>[number];
 
-/** Live (non-deleted) cards in the deck; a head count, so no rows are loaded. */
+/** Live cards in the deck (concept not deleted, course not hidden: same filters as the planner); a head count, so no rows are loaded. */
 export async function getDeckSize(courseId?: string) {
   const supabase = await createClient();
-  let q = supabase.from("cards").select("id", { count: "exact", head: true }).is("deleted_at", null);
+  let q = supabase
+    .from("cards")
+    .select("id, concept:concepts!concept_id!inner ( deleted_at ), course:courses!inner ( hidden )", {
+      count: "exact",
+      head: true,
+    })
+    .is("deleted_at", null)
+    .is("concept.deleted_at", null)
+    .eq("course.hidden", false);
   if (courseId) q = q.eq("course_id", courseId);
   const { count } = await q;
   return count ?? 0;

@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { dateOf, today } from "@/lib/dates";
 import { fetchAll } from "@/lib/classes/cards/fetch-all";
@@ -31,7 +32,8 @@ export type ReviewCard = {
   last_review: string | null;
 };
 
-async function loadPlanningState() {
+/** Memoised per request: the Cards tab calls this from several loaders. */
+const loadPlanningState = cache(async () => {
   const supabase = await createClient();
   const now = new Date();
   const day = today();
@@ -115,7 +117,7 @@ async function loadPlanningState() {
   );
 
   return { cards, rows, unlockedConceptIds, now, day, target, budgetMinutes, introducedToday, spentSecondsToday, perCard };
-}
+});
 
 /**
  * Plans the whole day (one shared budget), then, when `courseId` is given, keeps only that class's
@@ -129,7 +131,7 @@ export async function getStudyOverview(courseId?: string): Promise<{
   breakdown: Breakdown;
   spentMinutes: number;
   budgetMinutes: number;
-  /** New explain cards planned per day to meet the target date; null with no target. */
+  /** New explain cards planned per day to meet the target date; null with no target or a class scope. */
   explainPerDay: number | null;
 }> {
   const { cards, unlockedConceptIds, now, day, target, budgetMinutes, introducedToday, spentSecondsToday, perCard } =
@@ -156,7 +158,7 @@ export async function getStudyOverview(courseId?: string): Promise<{
   const scoped = courseId ? cards.filter((c) => c.course_id === courseId) : cards;
   const explain = scoped.filter((c) => c.level === "explain");
   const capacity = Math.max(1, Math.floor((budgetMinutes * 60) / Math.max(1, perCard.explain)));
-  const perDay = target
+  const perDay = target && !courseId
     ? explainBudget(explain.filter((c) => !c.introduced).length + introducedToday.explain, day, target)
     : null;
   return {
@@ -301,7 +303,6 @@ export type DeckCard = {
   id: string;
   level: Level;
   front: string;
-  back: string;
   page: number | null;
   material_id: string;
   material_title: string;
@@ -322,7 +323,7 @@ export async function getDeckCards(courseId: string): Promise<DeckCard[]> {
       supabase
         .from("cards")
         .select(
-          "id, key, level, front, back, page, state, due, reps, scheduled_days, material_id, concept_id, concept:concepts!concept_id!inner ( title, position, deleted_at ), material:materials ( title, sort_date ), course:courses!inner ( hidden )",
+          "id, key, level, front, page, state, due, reps, scheduled_days, material_id, concept_id, concept:concepts!concept_id!inner ( title, position, deleted_at ), material:materials ( title, sort_date ), course:courses!inner ( hidden )",
         )
         .eq("course_id", courseId)
         .is("deleted_at", null)
@@ -345,7 +346,6 @@ export async function getDeckCards(courseId: string): Promise<DeckCard[]> {
       id: r.id,
       level: r.level as Level,
       front: r.front,
-      back: r.back,
       page: r.page,
       material_id: r.material_id,
       material_title: r.material?.title ?? "",
