@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explainBudget, pace, planDay, secondsPerCard, unlockedConcepts, type Level, type PlanCard } from "./plan";
+import { cardStatus, explainBudget, pace, summarizeQueue, planDay, secondsPerCard, unlockedConcepts, type Level, type PlanCard } from "./plan";
 
 const NOW = new Date("2026-10-20T12:00:00Z");
 const PER_CARD: Record<Level, number> = { explain: 20, why: 40, apply: 60, contrast: 45, trap: 45 };
@@ -205,5 +205,65 @@ describe("pace", () => {
   });
   it("target today counts one day", () => {
     expect(pace(100, 0, "2026-10-20", "2026-10-20", 30).behindBy).toBe(70);
+  });
+});
+
+describe("planDay breakdown", () => {
+  it("counts reviews, new explain and new deeper in the queue", () => {
+    const due = [dueCard(), dueCard()];
+    const e = card();
+    const d = card({ level: "why", concept_id: "k" });
+    const r = planDay(input([...due, e, d], { unlockedConceptIds: new Set(["k"]) }));
+    expect(r.breakdown).toEqual({ reviews: 2, newExplain: 1, newDeeper: 1 });
+    expect(r.dueCount).toBe(2);
+  });
+});
+
+describe("summarizeQueue", () => {
+  it("recomputes counts and minutes for a subset of ids", () => {
+    const a = dueCard({ course_id: "A" });
+    const b = card({ course_id: "A" });
+    const c = dueCard({ course_id: "B" });
+    const r = summarizeQueue([a.id, b.id], [a, b, c], PER_CARD);
+    expect(r).toEqual({ dueCount: 1, estMinutes: 1, breakdown: { reviews: 1, newExplain: 1, newDeeper: 0 } });
+  });
+  it("is empty for no ids", () => {
+    expect(summarizeQueue([], [], PER_CARD)).toEqual({
+      dueCount: 0,
+      estMinutes: 0,
+      breakdown: { reviews: 0, newExplain: 0, newDeeper: 0 },
+    });
+  });
+});
+
+describe("cardStatus", () => {
+  const base = { level: "explain" as Level, state: 0, due: "2026-10-19T00:00:00Z", scheduled_days: 0, reps: 0, concept_id: "k" };
+  const none = new Set<string>();
+  const unlocked = new Set(["k"]);
+  it("new explain card", () => {
+    expect(cardStatus(base, none, NOW)).toEqual({ status: "new", due: null });
+  });
+  it("new deeper card with unlocked concept", () => {
+    expect(cardStatus({ ...base, level: "why" }, unlocked, NOW).status).toBe("new");
+  });
+  it("new deeper card with locked concept", () => {
+    expect(cardStatus({ ...base, level: "why" }, none, NOW).status).toBe("locked");
+    expect(cardStatus({ ...base, level: "why", concept_id: null }, unlocked, NOW).status).toBe("locked");
+  });
+  it("learning for state 1 and 3, with due", () => {
+    expect(cardStatus({ ...base, reps: 1, state: 1 }, none, NOW)).toEqual({ status: "learning", due: base.due });
+    expect(cardStatus({ ...base, reps: 3, state: 3 }, none, NOW).status).toBe("learning");
+  });
+  it("due when due <= now", () => {
+    expect(cardStatus({ ...base, reps: 2, state: 2, scheduled_days: 30 }, none, NOW).status).toBe("due");
+    expect(cardStatus({ ...base, reps: 2, state: 2, due: NOW.toISOString() }, none, NOW).status).toBe("due");
+  });
+  it("mastered when scheduled 21+ days and not due", () => {
+    const c = { ...base, reps: 5, state: 2, due: "2026-11-30T00:00:00Z" };
+    expect(cardStatus({ ...c, scheduled_days: 21 }, none, NOW)).toEqual({ status: "mastered", due: c.due });
+  });
+  it("review otherwise", () => {
+    const c = { ...base, reps: 2, state: 2, due: "2026-10-25T00:00:00Z", scheduled_days: 20 };
+    expect(cardStatus(c, none, NOW).status).toBe("review");
   });
 });

@@ -110,9 +110,13 @@ export async function loadCards(ids: string[]): Promise<ReviewCard[]> {
  * during a long session); only if that is empty, offers the next not-yet-introduced cards beyond
  * the budget. `heldIds` are unrated cards the client still holds. Rated cards are excluded server-side.
  */
-export async function loadMoreCards(heldIds: string[]): Promise<{ ids: string[]; cards: ReviewCard[] }> {
+export async function loadMoreCards(
+  heldIds: string[],
+  courseId?: string,
+): Promise<{ ids: string[]; cards: ReviewCard[] }> {
   const held = new Set(idsSchema.parse(heldIds));
-  const replanned = (await getStudyOverview()).queue.filter((id) => !held.has(id));
-  const ids = replanned.length ? replanned.slice(0, 50) : await getExtraQueue(20, [...held]);
+  const course = z.string().uuid().optional().parse(courseId);
+  const replanned = (await getStudyOverview(course)).queue.filter((id) => !held.has(id));
+  const ids = replanned.length ? replanned.slice(0, 50) : await getExtraQueue(20, [...held], course);
   return { ids, cards: await getCards(ids) };
 }

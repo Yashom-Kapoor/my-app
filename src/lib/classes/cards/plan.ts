@@ -121,6 +121,47 @@ export function alternateCourses(cards: PlanCard[]): PlanCard[] {
   return out;
 }
 
+export type Breakdown = { reviews: number; newExplain: number; newDeeper: number };
+
+/** Counts and time estimate for a list of queue ids (unknown ids are ignored). */
+export function summarizeQueue(
+  ids: string[],
+  cards: PlanCard[],
+  perCard: Record<Level, number>,
+): { dueCount: number; estMinutes: number; breakdown: Breakdown } {
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  const breakdown: Breakdown = { reviews: 0, newExplain: 0, newDeeper: 0 };
+  let seconds = 0;
+  for (const id of ids) {
+    const c = byId.get(id);
+    if (!c) continue;
+    seconds += perCard[c.level];
+    if (c.introduced) breakdown.reviews++;
+    else if (c.level === "explain") breakdown.newExplain++;
+    else breakdown.newDeeper++;
+  }
+  return { dueCount: breakdown.reviews, estMinutes: Math.ceil(seconds / 60), breakdown };
+}
+
+export type CardStatus = "new" | "locked" | "learning" | "due" | "review" | "mastered";
+
+export const MASTERED_DAYS = 21;
+
+export function cardStatus(
+  card: { level: Level; state: number; due: string; scheduled_days: number; reps: number; concept_id: string | null },
+  unlocked: Set<string>,
+  now: Date,
+): { status: CardStatus; due: string | null } {
+  if (card.reps === 0) {
+    const open = card.level === "explain" || (card.concept_id !== null && unlocked.has(card.concept_id));
+    return { status: open ? "new" : "locked", due: null };
+  }
+  if (card.state === 1 || card.state === 3) return { status: "learning", due: card.due };
+  if (Date.parse(card.due) <= now.getTime()) return { status: "due", due: card.due };
+  if (card.scheduled_days >= MASTERED_DAYS) return { status: "mastered", due: card.due };
+  return { status: "review", due: card.due };
+}
+
 export function planDay(input: {
   cards: PlanCard[];
   unlockedConceptIds: Set<string>;
@@ -131,7 +172,7 @@ export function planDay(input: {
   introducedToday: { explain: number; deeper: number };
   spentSecondsToday: number;
   perCard: Record<Level, number>;
-}): { queue: string[]; dueCount: number; estMinutes: number } {
+}): { queue: string[]; dueCount: number; estMinutes: number; breakdown: Breakdown } {
   const { cards, unlockedConceptIds, now, today, target, perCard } = input;
   const limit = input.budgetMinutes * 60;
   const nowMs = now.getTime();
@@ -171,7 +212,12 @@ export function planDay(input: {
   take(alternateCourses(newExplain), explainCap);
   take(alternateCourses(newDeeper), Infinity);
 
-  return { queue, dueCount: due.length, estMinutes: Math.ceil(seconds / 60) };
+  return {
+    queue,
+    dueCount: due.length,
+    estMinutes: Math.ceil(seconds / 60),
+    breakdown: summarizeQueue(queue, cards, perCard).breakdown,
+  };
 }
 
 /**
