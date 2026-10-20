@@ -1,4 +1,5 @@
 import "server-only";
+import { fetchAll } from "@/lib/classes/cards/fetch-all";
 import { rawToBlob } from "@/lib/classes/materials/notebook";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,15 +50,57 @@ export async function getCourse(id: string) {
   return data;
 }
 
-/** Materials still waiting for the ingest-materials skill (HTML readings and notebooks convert on their own). */
+/** Materials still waiting for the ingest-materials skill (HTML readings and notebooks convert on their own). Hidden courses excluded. */
 export async function getWaitingMaterialCount() {
   const supabase = await createClient();
   const { count } = await supabase
     .from("materials")
-    .select("id", { count: "exact", head: true })
+    .select("id, course:courses!inner ( hidden )", { count: "exact", head: true })
+    .eq("course.hidden", false)
     .not("format", "in", "(html,ipynb)")
     .in("status", ["pending", "processing", "failed"]);
   return count ?? 0;
+}
+
+/** The waiting materials themselves, for /classes/waiting. Same filter as getWaitingMaterialCount. */
+export async function getWaitingMaterials() {
+  const supabase = await createClient();
+  return fetchAll(async (from, to) =>
+    supabase
+      .from("materials")
+      .select("id, course_id, kind, title, status, error, source_url, course:courses!inner ( id, code, hidden )")
+      .eq("course.hidden", false)
+      .not("format", "in", "(html,ipynb)")
+      .in("status", ["pending", "processing", "failed"])
+      .order("sort_date", { ascending: true, nullsFirst: false })
+      .order("id")
+      .range(from, to),
+  );
+}
+export type WaitingMaterial = Awaited<ReturnType<typeof getWaitingMaterials>>[number];
+
+/**
+ * Ready, parentless materials whose cards are missing or stale. Mirrors needsCards / cardsMarker in
+ * .claude/skills/make-cards/scripts/merge.mjs: the marker is content_hash, else processed_at as an ISO string;
+ * cards are needed when cards_hash is null or differs from the marker.
+ */
+export async function getMaterialsNeedingCards() {
+  const supabase = await createClient();
+  const rows = await fetchAll(async (from, to) =>
+    supabase
+      .from("materials")
+      .select("id, course_id, kind, title, content_hash, processed_at, cards_hash, course:courses!inner ( id, code, hidden )")
+      .eq("course.hidden", false)
+      .eq("status", "ready")
+      .is("parent_id", null)
+      .order("sort_date", { ascending: true, nullsFirst: false })
+      .order("id")
+      .range(from, to),
+  );
+  return rows.filter((m) => {
+    const marker = m.content_hash ?? (m.processed_at ? new Date(m.processed_at).toISOString() : null);
+    return m.cards_hash == null || m.cards_hash !== marker;
+  });
 }
 
 export async function getMaterials(courseId: string) {

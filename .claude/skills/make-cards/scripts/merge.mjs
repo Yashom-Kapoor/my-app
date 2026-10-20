@@ -129,6 +129,12 @@ export function validateCards(incoming, ctx) {
       if (!hasOther || (c.other_concept == null && !c.other_concept_id)) errors.push(`${at}: contrast cards need other_concept (key or id:<uuid>)`);
       else if (c.other_concept != null) checkRef(c.other_concept, "other_concept");
       if (c.other_concept_id && UUID.test(c.other_concept_id) && !usable(c.other_concept_id)) errors.push(`${at}: other_concept_id ${whyNot(c.other_concept_id)}`);
+      // A contrast needs two different concepts: compare by key, or by id (id: refs and other_concept_id).
+      const mine = parseConceptRef(c.concept);
+      const others = [parseConceptRef(c.other_concept), c.other_concept_id ? { id: c.other_concept_id } : null].filter(Boolean);
+      if (mine && others.some((o) => (mine.id && o.id ? mine.id === o.id : mine.key && o.key && mine.key === o.key))) {
+        errors.push(`${at}: contrast other_concept is the same concept as concept`);
+      }
     } else if (hasOther) {
       errors.push(`${at}: other_concept / other_concept_id are only allowed on contrast cards, not on ${c.level} cards`);
     }

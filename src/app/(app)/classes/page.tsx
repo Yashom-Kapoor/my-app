@@ -6,7 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PROVIDER_LABELS, age, currentTime } from "@/lib/classes/format";
 import type { Provider } from "@/lib/classes/types";
-import { getAnnouncements, getAssignments, getConnections, getCourses, getWaitingMaterialCount } from "./data";
+import { getAnnouncements, getAssignments, getConnections, getCourses, getMaterialsNeedingCards, getWaitingMaterialCount } from "./data";
 import { AutoSync } from "./_components/auto-sync";
 import { DueList } from "./_components/due-list";
 import { Inbox } from "./_components/inbox";
@@ -43,12 +43,13 @@ function Header({ syncLabel }: { syncLabel: string | null }) {
 }
 
 async function ClassesView() {
-  const [connections, assignments, announcements, courses, waiting] = await Promise.all([
+  const [connections, assignments, announcements, courses, waiting, needCards] = await Promise.all([
     getConnections(),
     getAssignments(),
     getAnnouncements(),
     getCourses(),
     getWaitingMaterialCount(),
+    getMaterialsNeedingCards().then((m) => m.length),
   ]);
   const now = currentTime();
 
@@ -106,7 +107,7 @@ async function ClassesView() {
       ))}
 
       {waiting > 0 && (
-        <div className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+        <Link href="/classes/waiting" className="flex items-start gap-2 rounded-lg border p-3 text-sm">
           <FileStackIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <span>
             <span className="font-medium">
@@ -117,7 +118,16 @@ async function ClassesView() {
               transcribe them.
             </span>
           </span>
-        </div>
+        </Link>
+      )}
+
+      {needCards > 0 && (
+        <Link href="/classes/waiting" className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+          <FileStackIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <span className="font-medium">
+            {needCards} {needCards === 1 ? "material needs" : "materials need"} cards.
+          </span>
+        </Link>
       )}
 
       <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-muted" />}>

@@ -100,6 +100,14 @@ describe("validateCards", () => {
   const base = { concepts: [{ key: "c01", title: "T", position: 1 }, { key: "c02", title: "U", position: 2 }] };
   const mk = (extra) => ({ ...base, cards: [{ key: "k", concept: "c01", level: "explain", page: 1, front: "f", back: "b", ...extra }] });
 
+  it("rejects a contrast against its own concept", () => {
+    const same = /same concept/;
+    expect(validateCards(mk({ level: "contrast", other_concept: "c01" }), ctx())[0]).toMatch(same);
+    const found = new Map([[U1, { course_id: "co", deleted_at: null }]]);
+    expect(validateCards(mk({ level: "contrast", concept: `id:${U1}`, other_concept: `id:${U1}` }), ctx({ found }))[0]).toMatch(same);
+    expect(validateCards(mk({ level: "contrast", concept: `id:${U1}`, other_concept_id: U1 }), ctx({ found }))[0]).toMatch(same);
+  });
+
   it("accepts a valid file", () => {
     expect(validateCards(mk({}), ctx())).toEqual([]);
     expect(validateCards(mk({ level: "contrast", other_concept: "c02" }), ctx())).toEqual([]);
